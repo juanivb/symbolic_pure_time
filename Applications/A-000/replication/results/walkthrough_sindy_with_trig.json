@@ -1,0 +1,10 @@
+{
+  "pendulum_sindy_with_trig": {
+    "rmse": 9.038872345331342e-13,
+    "n_features": 11
+  },
+  "three_body_sindy_with_grav": {
+    "rmse": 1.319437229339283e-12,
+    "n_features": 24
+  }
+}

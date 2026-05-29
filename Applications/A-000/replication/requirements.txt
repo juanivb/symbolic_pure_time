@@ -1,0 +1,6 @@
+# Replication dependencies for A-000.
+# numpy is required by all scripts; pandas by the real-data scripts
+# (st_real_*); matplotlib by the figure generators and walkthrough_*.
+numpy>=1.24
+pandas>=2.0
+matplotlib>=3.7

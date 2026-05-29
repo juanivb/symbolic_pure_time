@@ -1,0 +1,24 @@
+/sessions/busy-bold-brown/mnt/paper_30_estimador/simulations/st_multivariate_battery.py:227: RuntimeWarning: Mean of empty slice
+  mse_pt = np.nanmean([r["mse_pt"] for r in rows])
+/sessions/busy-bold-brown/mnt/paper_30_estimador/simulations/st_multivariate_battery.py:228: RuntimeWarning: Mean of empty slice
+  mse_var = np.nanmean([r["mse_var"] for r in rows])
+====================================================================================================
+ST-Multivariate — PT-MV vs VAR(2) | T=800, N=30
+====================================================================================================
+
+                      cell |  PT-MV RMSE   VAR2 RMSE |  PT-MV MSE-Φ   VAR2 MSE-Φ | rank(M̂)
+-----------------------------------------------------------------------------------------------
+     M1: independent AR(1) |      1.4248      1.4248 |   1.1214e-02   1.1214e-02 |  2 (2-2)
+     M2: cointegrated I(1) |      0.6234      0.6234 |           —           — |  1 (1-2)
+     M3: triangular VAR(1) |      1.4246      1.4246 |   1.1369e-02   1.1369e-02 |  2 (2-2)
+      M4: mixed I(1)+AR(1) |      1.4315      1.4315 |   1.1754e-02   1.1754e-02 |  1 (1-2)
+     M5: explosive + AR(1) |     63.1011     70.4924 |   2.3489e-01   7.4942e-01 |  2 (2-2)
+          M6: two indep RW |      1.4365      1.4365 |   1.2041e-02   1.2041e-02 |  0 (0-1)
+           M7: full VAR(1) |      1.4248      1.4248 |   1.1289e-02   1.1289e-02 |  2 (2-2)
+
+Notes:
+  rank(M̂) ≈ 0 → no error correction (independent processes)
+  rank(M̂) ≈ 1 → bivariate cointegration with r=1 vector
+  rank(M̂) ≈ 2 → no cointegration / stationary (full rank)
+
+Wrote /sessions/busy-bold-brown/mnt/paper_30_estimador/results/st_multivariate_battery.csv

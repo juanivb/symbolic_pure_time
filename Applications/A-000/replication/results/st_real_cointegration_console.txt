@@ -1,0 +1,115 @@
+========================================================================
+ ST-Real-Cointegration — PT-MV on FRED + Yahoo data
+========================================================================
+
+========================================================================
+  R1: Term structure  |  vars = ['TB3MS', 'GS10']  |  T = 805, d = 2
+========================================================================
+
+ PT-MV emergent rank diagnostic:
+   singular values of M̂ = Â + B̂ - I:
+     σ_1 = 4.6700e-01   σ√T =    13.250  ← effective
+     σ_2 = 1.6766e-01   σ√T =     4.757  ← effective
+   → emergent rank r̂ = 2
+
+ Engle-Granger 2-step (d=2):
+   y_1 = -1.2774 + +0.9809 y_2 + u
+   ADF on u: t-stat = -4.262, coef = -0.0403
+   → Cointegration DETECTED at 5% (cv = -2.86)
+
+ Rolling 1-step forecast RMSE (train 80%):
+   PT-MV  = 0.235337
+   VAR(2) = 1.614476
+
+========================================================================
+  R2: Yield curve (3 tenors)  |  vars = ['GS1', 'GS5', 'GS10']  |  T = 805, d = 3
+========================================================================
+
+ PT-MV emergent rank diagnostic:
+   singular values of M̂ = Â + B̂ - I:
+     σ_1 = 5.7612e-01   σ√T =    16.346  ← effective
+     σ_2 = 1.8897e-01   σ√T =     5.361  ← effective
+     σ_3 = 1.7268e-02   σ√T =     0.490  ← spurious
+   → emergent rank r̂ = 2
+
+ Rolling 1-step forecast RMSE (train 80%):
+   PT-MV  = 0.308202
+   VAR(2) = 1.914748
+
+========================================================================
+  R3: Nominal rate vs inflation  |  vars = ['TB3MS', 'CPI_infl_pct']  |  T = 803, d = 2
+========================================================================
+
+ PT-MV emergent rank diagnostic:
+   singular values of M̂ = Â + B̂ - I:
+     σ_1 = 1.1488e+00   σ√T =    32.554  ← effective
+     σ_2 = 1.5446e-01   σ√T =     4.377  ← effective
+   → emergent rank r̂ = 2
+
+ Engle-Granger 2-step (d=2):
+   y_1 = +2.9463 + +0.3908 y_2 + u
+   ADF on u: t-stat = -3.072, coef = -0.0499
+   → Cointegration DETECTED at 5% (cv = -2.86)
+
+ Rolling 1-step forecast RMSE (train 80%):
+   PT-MV  = 2.904860
+   VAR(2) = 3.404296
+
+========================================================================
+  R4: XOM vs CVX (log-price)  |  vars = ['log_XOM', 'log_CVX']  |  T = 2829, d = 2
+========================================================================
+
+ PT-MV emergent rank diagnostic:
+   singular values of M̂ = Â + B̂ - I:
+     σ_1 = 2.5587e-01   σ√T =    13.609  ← effective
+     σ_2 = 7.0673e-03   σ√T =     0.376  ← spurious
+   → emergent rank r̂ = 1
+
+ Engle-Granger 2-step (d=2):
+   y_1 = -0.3242 + +0.9865 y_2 + u
+   ADF on u: t-stat = -1.506, coef = -0.0017
+   → Cointegration NOT detected at 5% (cv = -2.86)
+
+ Rolling 1-step forecast RMSE (train 80%):
+   PT-MV  = 0.020291
+   VAR(2) = 0.407680
+
+========================================================================
+  R5: GS vs MS (log-price)  |  vars = ['log_GS', 'log_MS']  |  T = 2829, d = 2
+========================================================================
+
+ PT-MV emergent rank diagnostic:
+   singular values of M̂ = Â + B̂ - I:
+     σ_1 = 1.3823e-01   σ√T =     7.352  ← effective
+     σ_2 = 5.6511e-03   σ√T =     0.301  ← spurious
+   → emergent rank r̂ = 1
+
+ Engle-Granger 2-step (d=2):
+   y_1 = +2.1774 + +0.8466 y_2 + u
+   ADF on u: t-stat = -1.377, coef = -0.0021
+   → Cointegration NOT detected at 5% (cv = -2.86)
+
+ Rolling 1-step forecast RMSE (train 80%):
+   PT-MV  = 0.026053
+   VAR(2) = 0.440050
+
+========================================================================
+  R6: GLD vs GDX (log-price)  |  vars = ['log_GLD', 'log_GDX']  |  T = 2829, d = 2
+========================================================================
+
+ PT-MV emergent rank diagnostic:
+   singular values of M̂ = Â + B̂ - I:
+     σ_1 = 8.0400e-02   σ√T =     4.276  ← effective
+     σ_2 = 2.5752e-02   σ√T =     1.370  ← spurious
+   → emergent rank r̂ = 1
+
+ Engle-Granger 2-step (d=2):
+   y_1 = +2.4597 + +0.7936 y_2 + u
+   ADF on u: t-stat = -2.886, coef = -0.0070
+   → Cointegration DETECTED at 5% (cv = -2.86)
+
+ Rolling 1-step forecast RMSE (train 80%):
+   PT-MV  = 0.028344
+   VAR(2) = 0.411533
+
+Wrote /sessions/busy-bold-brown/mnt/paper_30_estimador/results/st_real_cointegration.csv

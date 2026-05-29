@@ -1,0 +1,46 @@
+# ======================================================================
+# PUBLIC repo (symbolic_pure_time): distribution-only. Keep it clean.
+# Source, internal logs and notebook builders are NEVER published here;
+# they live in the private `research` repo.
+# ======================================================================
+
+# --- LaTeX source: the public repo ships compiled PDFs, not sources ---
+**/*.tex
+**/*.bib
+
+# --- notebook builders (the scripts that generate .ipynb) ---
+tutorial/**/build_*.py
+**/build_*_notebook.py
+**/build_*walkthrough*.py
+
+# --- internal development artifacts ---
+**/notes/
+**/previous_versions/
+**/previous_rejected_work/
+**/smoketests/
+**/*_log.md
+NEXT_SESSION.md
+cover_letters/
+highlights/
+
+# --- LaTeX aux (regenerated on compile) ---
+*.aux
+*.log
+*.bbl
+*.blg
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# --- python / Jupyter / OS ---
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+
+# --- paper PDFs: withheld until the paper formally enters review ---
+papers/**/paper.pdf
+Applications/**/paper.pdf

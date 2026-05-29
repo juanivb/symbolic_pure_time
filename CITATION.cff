@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this repository — papers or code — please cite the corresponding release on Zenodo."
+title: "Symbolic Pure Time — Geometric Signal Dynamics Programme"
+abstract: >
+  Research repository for the Geometric Signal Dynamics (GSD) programme.
+  Contains the three foundational papers (F-000, F-001, F-002), nine applied
+  papers (A-000 through A-008), the SPTLS (Symbolic Pure-Time Least Squares)
+  reference implementation, and a walkthrough notebook covering univariate
+  and multivariate cases.
+authors:
+  - family-names: "Vázquez Broquá"
+    given-names: "Juan Ignacio"
+    affiliation: "Pontificia Universidad Católica Argentina (UCA)"
+    orcid: "https://orcid.org/0009-0008-7156-3093"
+    email: "juanignaciovazquez@uca.edu.ar"
+license: MIT
+repository-code: "https://github.com/juanivb/symbolic_pure_time"
+version: "0.1.0"
+date-released: "2026-05-20"
+type: software
+keywords:
+  - "Geometric Signal Dynamics"
+  - "Clifford algebra"
+  - "Cl(3,0)"
+  - "Weyl algebra"
+  - "Symbolic Pure Time"
+  - "SPTLS"
+  - "Plancherel-graded characteristic function"
+identifiers:
+  - type: doi
+    value: "TBD"
+    description: "Zenodo concept DOI — assigned on first release."

@@ -1,0 +1,93 @@
+========================================================================
+ ST-Real-Extended — additional macro/financial cointegration tests
+========================================================================
+
+========================================================================
+  R7: Consumption-Income (Hall 1978)  |  vars = ['log_PCECC96', 'log_DPIC96']  |  T = 268, d = 2
+========================================================================
+
+  PT-MV rank diagnostic (threshold σ√T > 2):
+    σ_1 = 3.6743e-01   σ√T =     6.015  ← effective
+    σ_2 = 1.5239e-02   σ√T =     0.249  ← spurious
+  → emergent r̂ = 1
+
+  Engle-Granger ADF: t = -4.615, slope = +1.0333  → DETECTED
+
+  Rolling 1-step RMSE: PT-MV = 0.036006   VAR(2) = 0.036006   ratio = 1.0000
+
+========================================================================
+  R8: M1 vs M2 (monetary aggregates)  |  vars = ['log_M1', 'log_M2']  |  T = 805, d = 2
+========================================================================
+
+  PT-MV rank diagnostic (threshold σ√T > 2):
+    σ_1 = 4.9413e+00   σ√T =   140.196  ← effective
+    σ_2 = 2.6475e-04   σ√T =     0.008  ← spurious
+  → emergent r̂ = 1
+
+  Engle-Granger ADF: t = -0.846, slope = +1.0047  → not detected
+
+  Rolling 1-step RMSE: PT-MV = 0.110068   VAR(2) = 0.110068   ratio = 1.0000
+
+========================================================================
+  R9: FX triangulation JPY/EUR/GBP  |  vars = ['log_JPYUSD', 'log_USDEUR', 'log_USDGBP']  |  T = 6829, d = 3
+========================================================================
+
+  PT-MV rank diagnostic (threshold σ√T > 2):
+    σ_1 = 7.0617e-02   σ√T =     5.836  ← effective
+    σ_2 = 2.8086e-02   σ√T =     2.321  ← effective
+    σ_3 = 4.1059e-04   σ√T =     0.034  ← spurious
+  → emergent r̂ = 2
+
+  Rolling 1-step RMSE: PT-MV = 0.010131   VAR(2) = 0.010131   ratio = 1.0000
+
+========================================================================
+  R10: Argentina USD/ARS vs inflation (explosive)  |  vars = ['log_USDARS', 'inflation_pct']  |  T = 99, d = 2
+========================================================================
+
+  PT-MV rank diagnostic (threshold σ√T > 2):
+    σ_1 = 8.3353e+00   σ√T =    82.935  ← effective
+    σ_2 = 7.5731e-03   σ√T =     0.075  ← spurious
+  → emergent r̂ = 1
+
+  Engle-Granger ADF: t = -0.656, slope = +0.1720  → not detected
+
+  Rolling 1-step RMSE: PT-MV = 3.785925   VAR(2) = 3.785925   ratio = 1.0000
+
+========================================================================
+  R11: GDP vs Industrial Production  |  vars = ['log_GDP', 'log_INDPRO']  |  T = 268, d = 2
+========================================================================
+
+  PT-MV rank diagnostic (threshold σ√T > 2):
+    σ_1 = 3.9304e-01   σ√T =     6.434  ← effective
+    σ_2 = 8.9807e-02   σ√T =     1.470  ← spurious
+  → emergent r̂ = 1
+
+  Engle-Granger ADF: t = -0.669, slope = +1.2187  → not detected
+
+  Rolling 1-step RMSE: PT-MV = 0.038524   VAR(2) = 0.038524   ratio = 1.0000
+
+========================================================================
+  R12: 10Y nominal vs 10Y real ex-post  |  vars = ['GS10', 'real10y']  |  T = 803, d = 2
+========================================================================
+
+  PT-MV rank diagnostic (threshold σ√T > 2):
+    σ_1 = 8.0889e-01   σ√T =    22.922  ← effective
+    σ_2 = 1.9015e-01   σ√T =     5.388  ← effective
+  → emergent r̂ = 2
+
+  Engle-Granger ADF: t = -2.607, slope = +0.2993  → not detected
+
+  Rolling 1-step RMSE: PT-MV = 2.782151   VAR(2) = 2.782151   ratio = 1.0000
+
+Wrote /sessions/busy-bold-brown/mnt/paper_30_estimador/results/st_real_extended.csv
+
+========================================================================
+ Summary table
+========================================================================
+                                      cell |     T |  d |  r̂ |     EG t |  RMSE-ratio (PT/VAR)
+        R7: Consumption-Income (Hall 1978) |   268 |  2 |   1 |    -4.62 |               1.0000
+        R8: M1 vs M2 (monetary aggregates) |   805 |  2 |   1 |    -0.85 |               1.0000
+          R9: FX triangulation JPY/EUR/GBP |  6829 |  3 |   2 |        — |               1.0000
+R10: Argentina USD/ARS vs inflation (explosive) |    99 |  2 |   1 |    -0.66 |               1.0000
+         R11: GDP vs Industrial Production |   268 |  2 |   1 |    -0.67 |               1.0000
+      R12: 10Y nominal vs 10Y real ex-post |   803 |  2 |   2 |    -2.61 |               1.0000

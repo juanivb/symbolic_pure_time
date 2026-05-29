@@ -1,0 +1,7 @@
+# Runtime requirements for the OLS-vs-SPTLS walkthrough notebook and
+# replication.py. The C-extensions must share one NumPy ABI: an old
+# matplotlib built against NumPy 1.x will fail under NumPy 2.x with
+# "numpy.core.multiarray failed to import". Upgrade both, then restart
+# the kernel.
+numpy>=2.0
+matplotlib>=3.9
