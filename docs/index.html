@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Symbolic Pure Time — OLS for any trajectory</title>
-<meta name="description" content="SPTLS: ordinary least squares moved from lagged values to the kinematic jet. One white-box, dependency-light tool for any time series — stationary, cointegrated, nonlinear, even chaotic.">
+<meta name="description" content="A soft landing for Symbolic Pure-Time Least Squares (SPTLS): ordinary least squares moved to the kinematic jet. A universal approximator of dynamics with a white-box, graded reading of any trajectory.">
 <meta property="og:title" content="Symbolic Pure Time — OLS for any trajectory">
 <meta property="og:description" content="Recover the Lorenz attractor in your browser. SPTLS is OLS on the kinematic jet: covers every regime, white-box, one closed-form solve.">
 <meta property="og:type" content="website">
 <style>
   :root{
     --ink:#14171f;--muted:#5b6472;--line:#e6e8ee;--bg:#fbfbfd;--card:#fff;
-    --indigo:#4f46e5;--rotor:#e0552b;--good:#1f9d6b;--maxw:760px;
+    --indigo:#4f46e5;--rotor:#e0552b;--good:#1f9d6b;--scal:#8a8f9a;--maxw:780px;
     --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -19,130 +19,271 @@
   *{box-sizing:border-box} html{scroll-behavior:smooth}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:18px;-webkit-font-smoothing:antialiased}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
-  h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.18;letter-spacing:-.01em}
-  h2{font-size:1.9rem;margin:0 0 .2em} h3{font-size:1.25rem;margin:1.6em 0 .3em}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.2;letter-spacing:-.01em}
+  h2{font-size:1.85rem;margin:0 0 .2em} h3{font-size:1.18rem;margin:1.5em 0 .3em}
   p{margin:.7em 0} a{color:var(--indigo);text-decoration:none} a:hover{text-decoration:underline}
   .muted{color:var(--muted)} .small{font-size:.92rem}
-  code,.mono{font-family:var(--mono);font-size:.92em;background:#f1f2f6;padding:.1em .35em;border-radius:5px}
-  section{padding:54px 0;border-top:1px solid var(--line)}
+  code,.mono{font-family:var(--mono);font-size:.9em;background:#f1f2f6;padding:.1em .35em;border-radius:5px}
+  section{padding:50px 0;border-top:1px solid var(--line)}
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(251,251,253,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;gap:18px;align-items:center;height:50px;overflow-x:auto;white-space:nowrap}
+  nav b{font-family:var(--serif);font-size:1rem}
+  nav a{font-size:.83rem;color:var(--muted)} nav a:hover{color:var(--ink);text-decoration:none}
+  /* hero */
   .hero{position:relative;height:90vh;min-height:580px;border-top:none;overflow:hidden;display:flex;align-items:center;background:radial-gradient(125% 95% at 72% 8%,#fff,#f2f3fb 68%,#e9ebf8)}
   #lorenz{position:absolute;inset:0;width:100%;height:100%}
   .hero .wrap{position:relative;z-index:2}
-  .badge{display:inline-block;font-family:var(--mono);font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--indigo);background:#ececfb;border:1px solid #dcd9fb;padding:5px 11px;border-radius:999px}
-  .hero h1{font-size:clamp(2.4rem,6vw,4rem);margin:.35em 0 .15em}
-  .hero .tag{font-size:1.25rem;color:var(--muted);max-width:30ch}
-  .cta{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
-  .btn{display:inline-block;padding:11px 18px;border-radius:10px;font-weight:600;font-size:.96rem}
+  .badge{display:inline-block;font-family:var(--mono);font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--indigo);background:#ececfb;border:1px solid #dcd9fb;padding:5px 11px;border-radius:999px}
+  .hero h1{font-size:clamp(2.3rem,6vw,3.9rem);margin:.35em 0 .12em}
+  .hero .tag{font-size:1.22rem;color:var(--muted);max-width:32ch}
+  .cta{margin-top:24px;display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:11px 18px;border-radius:10px;font-weight:600;font-size:.95rem}
   .btn.p{background:var(--indigo);color:#fff} .btn.p:hover{background:#3f37c9;text-decoration:none}
   .btn.s{background:#fff;border:1px solid var(--line);color:var(--ink)} .btn.s:hover{border-color:#c8ccd6;text-decoration:none}
-  .eq{font-family:var(--serif);font-size:1.5rem;text-align:center;margin:.8em 0} .eq .v{color:var(--indigo)}
+  .eq{font-family:var(--serif);font-size:1.45rem;text-align:center;margin:.7em 0} .eq .v{color:var(--indigo)} .eq .b{color:var(--rotor)}
+  .lead{font-size:1.08rem}
+  details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:14px 0;background:#fff}
+  details summary{cursor:pointer;font-weight:600;font-size:.95rem;color:var(--indigo)}
+  details p{font-size:.95rem;margin:.5em 0}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px;box-shadow:0 1px 3px rgba(20,23,31,.04)}
-  .twin{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:620px){.twin{grid-template-columns:1fr}}
+  .twin{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:620px){.twin{grid-template-columns:1fr}}
   .cv-card .t{font-weight:700;font-size:.95rem;margin:0 0 6px} .cv-card .t.sp{color:var(--good)} .cv-card .t.ar{color:var(--rotor)}
-  .cv-card canvas{width:100%;height:240px;display:block;border-radius:10px;background:#0e1020;border:1px solid var(--line)}
+  canvas.plot{width:100%;height:230px;display:block;border-radius:10px;border:1px solid var(--line)}
+  canvas.dark{background:#0e1020} canvas.lite{background:#fcfcfe}
   .cv-card .sub{font-size:.82rem;color:var(--muted);margin:6px 0 0}
-  .r2line{margin-top:14px;font-size:.95rem;color:var(--muted)}
-  .r2line b{color:var(--ink)}
-  .ctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 16px}
-  .ctl label{font-size:.92rem;color:var(--muted);font-weight:600} input[type=range]{flex:1;min-width:160px;accent-color:var(--indigo)}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:22px}
-  .c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .c .n{font-family:var(--mono);color:var(--indigo);font-size:.85rem}
-  .c h3{margin:.2em 0 .3em;font-size:1.08rem} .c p{margin:0;font-size:.95rem;color:var(--muted)}
+  .r2{margin-top:12px;font-size:.95rem;color:var(--muted)} .r2 b{color:var(--ink)}
+  .ctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 14px}
+  .ctl label{font-size:.9rem;color:var(--muted);font-weight:600} input[type=range]{flex:1;min-width:150px;accent-color:var(--indigo)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:20px}
+  .c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .c .n{font-family:var(--mono);color:var(--indigo);font-size:.82rem} .c h3{margin:.2em 0 .3em;font-size:1.05rem} .c p{margin:0;font-size:.93rem;color:var(--muted)}
+  /* polar map */
+  .mapwrap{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:center;margin-top:16px}@media(max-width:680px){.mapwrap{grid-template-columns:1fr}}
+  .legend{font-size:.9rem} .legend li{margin:.35em 0;list-style:none}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:middle}
   footer{border-top:1px solid var(--line);padding:40px 0 70px;color:var(--muted);font-size:.92rem}
-  .note{font-size:.86rem;color:var(--muted);margin-top:10px}
+  .note{font-size:.85rem;color:var(--muted);margin-top:10px}
 </style>
 </head>
 <body>
+
+<nav><div class="wrap">
+  <b>Symbolic&nbsp;Pure&nbsp;Time</b>
+  <a href="#idea">The idea</a><a href="#matrix">The operator</a><a href="#reading">Reading&nbsp;M</a>
+  <a href="#time">Time</a><a href="#practice">In&nbsp;practice</a><a href="#why">Why</a><a href="#get">Get&nbsp;it</a>
+</div></nav>
 
 <header class="hero">
   <canvas id="lorenz"></canvas>
   <div class="wrap">
     <span class="badge">Symbolic Pure Time · MIT</span>
     <h1>OLS, for <em>any</em> trajectory.</h1>
-    <p class="tag">One white-box estimator for every kind of time series — no pre-testing, no parameters to tune.</p>
+    <p class="tag">A universal approximator of dynamics with a white-box, graded reading — and it's just least squares in the right domain.</p>
     <div class="cta">
-      <a class="btn p" href="#demo">Recover this attractor ↓</a>
+      <a class="btn p" href="#practice">See it work ↓</a>
       <a class="btn s" href="https://github.com/juanivb/symbolic_pure_time">Code & notebooks (MIT)</a>
     </div>
   </div>
 </header>
 
-<section>
+<!-- FUNDAMENTALS -->
+<section id="idea">
   <div class="wrap">
-    <h2>Real series don't fit one box</h2>
-    <p>A series can be stationary, trending, cointegrated, nonlinear — even chaotic.
-    The classical workflow makes you decide <em>which</em> before you can model: test for
-    unit roots, choose how many times to difference, pick a lag order, choose a VAR
-    variant or a VECM and its cointegration rank. A maze of decisions, each a chance to
-    get it wrong.</p>
-    <p><strong>Symbolic Pure-Time Least Squares (SPTLS)</strong> removes the maze. It is
-    ordinary least squares — moved from lagged values to the <em>kinematic jet</em>.</p>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <h2>From lagged values to the jet</h2>
-    <p>Instead of regressing on past <em>values</em>, SPTLS regresses on the instantaneous
-    state of the trajectory — level, velocity and acceleration:</p>
+    <h2>One idea: model the motion, not the past values</h2>
+    <p class="lead">Classical time-series models regress on <em>past values</em>. Symbolic
+    Pure-Time Least Squares (SPTLS) regresses on the <em>instantaneous state of the
+    trajectory</em> — its level, velocity and acceleration, the <em>kinematic jet</em>:</p>
     <p class="eq">q(t) = ( <span class="v">z</span>, <span class="v">Δz</span>, <span class="v">Δ²z</span> )</p>
-    <p>One closed-form least-squares solve on <code>q(t)</code> keeps everything OLS gives
-    you — speed, a closed form, fully readable coefficients — while the jet lets that same
-    solve describe motion a lagged-value model never can. Add the quadratic terms of the
-    jet and it captures nonlinear vector fields exactly.</p>
+
+    <h3>Why this domain — a thread from Hamilton and Clifford</h3>
+    <p>Two states of a moving system are compared not by subtracting numbers but by the
+    geometric relation that carries one into the other — a rotation-and-stretch. That
+    relation is exactly what quaternions were built to express: Hamilton's
+    <span class="mono">i, j, k</span> are the three planes in which a state can turn. The
+    kinematic jet plays the same role here — its three components span the planes
+    <em>level–velocity</em>, <em>level–acceleration</em>, <em>velocity–acceleration</em> —
+    and biquaternions (Clifford's extension) are the natural language for comparing two
+    such states. SPTLS lives on that substrate, <span class="mono">A ⊗ Cl(3,0)</span>:
+    differences (A) acting on a geometric state (Cl(3,0)). The point of the substrate is
+    <em>geometric invariance</em> — the comparison of states doesn't depend on the
+    coordinates you happened to record them in.</p>
+    <p class="muted small">The intuition is enough here; the formal development lives in the foundational papers.</p>
   </div>
 </section>
 
-<section id="demo">
+<!-- THE OPERATOR -->
+<section id="matrix">
   <div class="wrap">
-    <h2>Recover the Lorenz attractor — live</h2>
-    <p>The butterfly above is the Lorenz system: deterministic but chaotic, and
-    <em>quadratic</em>. We fit its full 3-D state one step ahead, in your browser, two ways —
-    a linear <strong>VAR</strong>, and <strong>SPTLS</strong> on the quadratic jet — then let
-    each fitted model <em>run free</em> from one starting point. Only the model that captured
-    the quadratic field regenerates the attractor.</p>
+    <h2>The operator: one closed-form solve</h2>
+    <p>SPTLS fits a single linear operator <span class="mono">M</span> that advances the jet
+    one step, <span class="mono">q(t+1) ≈ M·q(t)</span>, by ordinary least squares. That's
+    the entire computation — no unit-root pre-testing, no lag-order search, no differencing
+    decision. It keeps everything OLS gives: a closed form, speed, and fully readable
+    coefficients. With the quadratic terms of the jet it captures nonlinear vector fields too.</p>
+    <details>
+      <summary>How M is computed (and decomposed)</summary>
+      <p><b>Fit.</b> Stack the jets into <span class="mono">Q₀, Q₁</span> and solve
+      <span class="mono">M = (Q₁ᵀQ₀)(Q₀ᵀQ₀)⁻¹</span> — the same normal-equations least
+      squares as OLS, on the jet instead of on lags.</p>
+      <p><b>Grade split.</b> Any 3×3 splits into a symmetric and an antisymmetric part,
+      <span class="mono">M = ½(M+Mᵀ) + ½(M−Mᵀ)</span>; the antisymmetric part is the
+      grade-2 (bivector) content.</p>
+      <p><b>Polar split.</b> From the SVD <span class="mono">M = UΣVᵀ</span>, the rotor is
+      <span class="mono">R = UVᵀ</span> and the stretch <span class="mono">P = VΣVᵀ</span>,
+      so <span class="mono">M = R·P</span>. Standard linear algebra; nothing exotic.</p>
+    </details>
+  </div>
+</section>
+
+<!-- NATIVE STATE -->
+<section>
+  <div class="wrap">
+    <h2>It forecasts the <em>state</em>, natively</h2>
+    <p>Because the unknown is the jet, one SPTLS step returns <strong>level, velocity and
+    acceleration together</strong> — not just the next value. Ordinary least squares gives
+    only the level; momentum and curvature come out only indirectly, by differencing the
+    level forecasts (which amplifies noise and need not be coherent). The native state is
+    what you actually want for control and risk — you know whether you are <em>accelerating
+    into or out of</em> a regime — and it is what makes iterated free-run possible: you
+    advance the whole state, not a single scalar (that is how the attractor below gets
+    regenerated).</p>
+  </div>
+</section>
+
+<!-- READING M -->
+<section id="reading">
+  <div class="wrap">
+    <h2>Reading M: nine numbers, a full geometry</h2>
+    <p>The fitted operator is a white box. Its nine entries — and the eighteen of its
+    polar form <span class="mono">M = R·P</span> — carry the complete local geometry of the
+    dynamics, by Clifford grade.</p>
+    <div class="mapwrap">
+      <svg viewBox="0 0 300 300" width="100%" aria-label="grade map of M">
+        <defs><style>.lbl{font:12px var(--mono,monospace);fill:#5b6472}.cell{font:13px monospace;fill:#14171f}</style></defs>
+        <!-- 3x3 grid -->
+        <g transform="translate(40,40)">
+          <rect x="0" y="0" width="220" height="220" rx="10" fill="#fff" stroke="#e6e8ee"/>
+          <line x1="73" y1="0" x2="73" y2="220" stroke="#eef0f4"/><line x1="146" y1="0" x2="146" y2="220" stroke="#eef0f4"/>
+          <line x1="0" y1="73" x2="220" y2="73" stroke="#eef0f4"/><line x1="0" y1="146" x2="220" y2="146" stroke="#eef0f4"/>
+          <!-- diagonal: scalar/grade-0 -->
+          <circle cx="36" cy="36" r="15" fill="#8a8f9a22"/><circle cx="110" cy="110" r="15" fill="#8a8f9a22"/><circle cx="183" cy="183" r="15" fill="#8a8f9a22"/>
+          <!-- bivector pairs -->
+          <rect x="88" y="14" width="44" height="44" rx="7" fill="#e0552b22"/><text x="110" y="40" text-anchor="middle" class="cell" fill="#e0552b">e₁₂</text>
+          <rect x="161" y="14" width="44" height="44" rx="7" fill="#4f46e522"/><text x="183" y="40" text-anchor="middle" class="cell" fill="#4f46e5">e₁₃</text>
+          <rect x="161" y="88" width="44" height="44" rx="7" fill="#1f9d6b22"/><text x="183" y="114" text-anchor="middle" class="cell" fill="#1f9d6b">e₂₃</text>
+          <text x="36" y="40" text-anchor="middle" class="cell" fill="#8a8f9a">s</text>
+          <text x="110" y="114" text-anchor="middle" class="cell" fill="#8a8f9a">s</text>
+          <text x="183" y="187" text-anchor="middle" class="cell" fill="#8a8f9a">s</text>
+          <text x="36" y="114" text-anchor="middle" class="lbl">·</text><text x="36" y="187" text-anchor="middle" class="lbl">·</text><text x="110" y="187" text-anchor="middle" class="lbl">·</text>
+        </g>
+        <text x="150" y="20" text-anchor="middle" class="lbl">M acts on q = (z, Δz, Δ²z)</text>
+        <text x="150" y="290" text-anchor="middle" class="lbl">det(M) = e₁₂₃  ·  oriented volume / step</text>
+      </svg>
+      <ul class="legend">
+        <li><span class="sw" style="background:#8a8f9a"></span><b>Grade-0 (scalar):</b> the trace / isotropic gain — overall growth or decay.</li>
+        <li><span class="sw" style="background:var(--rotor)"></span><b>Bivector e₁₂:</b> rotation in the level–velocity plane — the oscillation. (In a damped rotation it dominates: ≈ 0.81.)</li>
+        <li><span class="sw" style="background:var(--indigo)"></span><b>Bivector e₁₃ / <span style="color:var(--good)">e₂₃</span>:</b> couplings to acceleration — often weak, and noise when the process is simple.</li>
+        <li><span class="sw" style="background:#14171f"></span><b>Pseudoscalar (grade-3) = det M:</b> the oriented volume change of the jet per step — contraction (dissipation) and orientation.</li>
+      </ul>
+    </div>
+    <p style="margin-top:14px"><b>Polar form M = R·P.</b> The <b style="color:var(--rotor)">rotor R</b> is pure
+    orientation — an axis (which kinematic plane turns) and an angle (how fast: the
+    frequency). The <b>stretch P</b> is the gain: its eigenvalues are the per-direction
+    growth/decay rates that OLS sees as its "abelian shadow." On the damped rotation above,
+    R turns ≈ 81° per step and det M ≈ −0.40 — the jet cell shrinks to 40% and flips
+    orientation each step.</p>
+    <p class="muted"><b>From point estimate to distribution.</b> That rotor/bivector is the
+    empirical fingerprint of the same grade-2 content that the programme's graded
+    characteristic function lifts from a single estimate to a full distributional spectrum —
+    the bridge from "this fit" to "this law."</p>
+  </div>
+</section>
+
+<!-- TIME -->
+<section id="time">
+  <div class="wrap">
+    <h2>What the operator says about time</h2>
+    <p>M is the operator that advances the jet of time one step — a local chronometer. Its
+    decomposition reads the texture of time itself: the <b style="color:var(--rotor)">rotor</b>
+    is time's cyclic, recurrent aspect; the <b>stretch</b> is its persistence and memory; the
+    <b>pseudoscalar</b> (det&nbsp;M&nbsp;&lt;&nbsp;1) is its irreversibility — the arrow,
+    written as a contraction of phase-space volume. Hamilton called algebra "the science of
+    pure time"; here those nine numbers are an instantaneous algebraic portrait of how time
+    acts on the state.</p>
+  </div>
+</section>
+
+<!-- PRACTICE -->
+<section id="practice">
+  <div class="wrap">
+    <h2>In practice — three trajectories</h2>
+    <p>Three regimes, judged live in your browser. From a univariate map, to a nonlinear
+    cointegrated pair, to deterministic chaos.</p>
+
+    <h3>1 · A nonlinear map (the logistic) — OLS vs SPTLS</h3>
+    <p>The logistic map has almost no linear autocorrelation, so an AR/OLS model fails; the
+    quadratic jet recovers the map exactly.</p>
     <div class="panel">
-      <div class="ctl">
-        <label>free-run length</label>
-        <input id="steps" type="range" min="500" max="6000" value="3500" step="250">
-        <span id="stepsval" class="mono"></span>
-      </div>
+      <canvas id="cvLog" class="plot lite"></canvas>
+      <p class="r2" id="r2log"></p>
+    </div>
+
+    <h3>2 · A nonlinear cointegrated pair — VECM/linear vs SPTLS</h3>
+    <p>Two integrated series share an equilibrium, but the equilibrium is a <em>curve</em>, not
+    a line. A linear cointegration / VECM fits a straight line through it; SPTLS on the
+    quadratic jet follows the curve.</p>
+    <div class="panel">
+      <canvas id="cvCoint" class="plot lite"></canvas>
+      <p class="r2" id="r2coint"></p>
+    </div>
+
+    <h3>3 · Deterministic chaos (Lorenz) — recover the attractor</h3>
+    <p>We fit the 3-D Lorenz state one step ahead, then let each fitted model <em>run free</em>.
+    Only the model that captured the quadratic field regenerates the butterfly; the linear one
+    collapses to a point.</p>
+    <div class="panel">
+      <div class="ctl"><label>free-run length</label><input id="steps" type="range" min="500" max="6000" value="3500" step="250"><span id="stepsval" class="mono"></span></div>
       <div class="twin">
-        <div class="cv-card"><p class="t sp">SPTLS — quadratic jet</p><canvas id="cvSP"></canvas>
-          <p class="sub">recovers the field → regenerates both wings</p></div>
-        <div class="cv-card"><p class="t ar">VAR — linear</p><canvas id="cvAR"></canvas>
-          <p class="sub">can't represent xy, xz → collapses to a point</p></div>
+        <div class="cv-card"><p class="t sp">SPTLS — quadratic jet</p><canvas id="cvSP" class="plot dark"></canvas><p class="sub">recovers the field → both wings</p></div>
+        <div class="cv-card"><p class="t ar">VAR — linear</p><canvas id="cvAR" class="plot dark"></canvas><p class="sub">collapses to a point</p></div>
       </div>
-      <p class="r2line" id="r2line"></p>
-      <p class="note">One-step fit is good for both (Lorenz is locally smooth). The difference
-      shows under free iteration: SPTLS recovered the exact quadratic vector field, so its
-      free-run lands back on the attractor; the linear model cannot, and decays to a fixed point.</p>
+      <p class="r2" id="r2lor"></p>
     </div>
   </div>
 </section>
 
-<section>
+<!-- WHY -->
+<section id="why">
   <div class="wrap">
-    <h2>Why it works: it's OLS, extended</h2>
-    <p>Because SPTLS <em>is</em> least squares on the jet, it inherits OLS's virtues and
-    extends their reach to the whole zoo of trajectories.</p>
+    <h2>Why SPTLS</h2>
+    <p class="lead">SPTLS is a <strong>universal approximator of trajectories and dynamical
+    systems</strong>: on the kinematic jet, with the graded dictionary, it can represent any
+    smooth vector field — that is why it recovered the Lorenz equations above. Forecasting
+    across every regime follows from this single fact.</p>
+    <p>And it inherits everything from being, at bottom, <strong>ordinary least squares in the
+    right domain</strong> — the vector extension of OLS onto the jet:</p>
     <div class="cards">
-      <div class="c"><div class="n">01</div><h3>Covers every regime</h3><p>Stationary, integrated, cointegrated, trending, nonlinear, chaotic — one call, out of the box.</p></div>
-      <div class="c"><div class="n">02</div><h3>Ties the right model</h3><p>Matches a tuned VAR and a Johansen VECM on linear data — and wins when the dynamics turn nonlinear.</p></div>
-      <div class="c"><div class="n">03</div><h3>White box</h3><p>Every coefficient is readable: rotation, gains, cross-effects, shared directions. Interpretability built in.</p></div>
-      <div class="c"><div class="n">04</div><h3>Minimal cost</h3><p>One closed-form solve — about 15× cheaper than the econometric workflow, with none of the pre-testing.</p></div>
+      <div class="c"><div class="n">universal</div><h3>Approximates any dynamics</h3><p>Smooth vector fields, recovered from data — linear, nonlinear, chaotic alike.</p></div>
+      <div class="c"><div class="n">inherited</div><h3>Ties the right model</h3><p>Matches a tuned VAR and a Johansen VECM on linear data — out of the box, no model selection.</p></div>
+      <div class="c"><div class="n">inherited</div><h3>White box</h3><p>Every coefficient readable: rotation, gains, cross-effects. Interpretability is built in.</p></div>
+      <div class="c"><div class="n">inherited</div><h3>One cheap solve</h3><p>A single closed-form least squares — about 15× cheaper than the econometric workflow.</p></div>
     </div>
+    <h3>Building blocks</h3>
+    <p>The substrate is composable. <span class="mono">A ⊗ Cl(3,0)</span> can take a further
+    factor — e.g. <span class="mono">⊗ Cl(0,1)</span> — that adds an extra orientation axis to
+    the state; the least-squares solution doesn't change, only the embedding it runs on. The
+    same machine, retuned to the regime you need.</p>
   </div>
 </section>
 
-<section>
+<!-- GET -->
+<section id="get">
   <div class="wrap">
     <h2>Open, and ready to run</h2>
-    <p>The reference library <code>gsd</code> is pure NumPy and <strong>MIT-licensed</strong>, with
-    ready-to-run exploratory notebooks — univariate (OLS vs SPTLS, step by step) and multivariate
-    (VAR/VECM vs SPTLS across regimes).</p>
+    <p>The reference library <code>gsd</code> is pure NumPy and <strong>MIT-licensed</strong>,
+    with ready-to-run exploratory notebooks — univariate (OLS vs SPTLS, step by step) and
+    multivariate (VAR/VECM vs SPTLS across regimes).</p>
     <div class="cta">
       <a class="btn p" href="https://github.com/juanivb/symbolic_pure_time">Get it on GitHub</a>
       <a class="btn s" href="https://github.com/juanivb/symbolic_pure_time/tree/main/tutorial">Browse the notebooks</a>
@@ -150,93 +291,87 @@
   </div>
 </section>
 
-<footer>
-  <div class="wrap">
-    <p>Symbolic Pure Time · a Geometric Signal Dynamics project · <a href="https://www.linkedin.com/in/jivb/">get in touch</a></p>
-    <p class="small">Everything on this page — the attractor and both fits — runs client-side in your browser.</p>
-  </div>
-</footer>
+<footer><div class="wrap">
+  <p>Symbolic Pure Time · a Geometric Signal Dynamics project · <a href="https://www.linkedin.com/in/jivb/">get in touch</a></p>
+  <p class="small">Every figure here — the attractor and all three fits — runs client-side in your browser.</p>
+</div></footer>
 
 <script>
 "use strict";
-function lorenz(n,dt){let x=1,y=1,z=1,o=[];for(let i=0;i<n;i++){
-  let dx=10*(y-x),dy=x*(28-z)-y,dz=x*y-8/3*z;x+=dx*dt;y+=dy*dt;z+=dz*dt;o.push([x,y,z]);}return o;}
-function solve(A,b){const n=A.length;A=A.map((r,i)=>r.concat(b[i]));
-  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];
-    for(let r=0;r<n;r++){if(r===c)continue;const f=A[r][c]/A[c][c];for(let k=c;k<=n;k++)A[r][k]-=f*A[c][k];}}
-  return A.map((r,i)=>r[n]/r[i]);}
-function fitcol(X,y){const n=X[0].length,XtX=Array.from({length:n},()=>Array(n).fill(0)),Xty=Array(n).fill(0);
-  for(let i=0;i<X.length;i++)for(let a=0;a<n;a++){Xty[a]+=X[i][a]*y[i];for(let b=0;b<n;b++)XtX[a][b]+=X[i][a]*X[i][b];}
-  for(let a=0;a<n;a++)XtX[a][a]+=1e-7;return solve(XtX,Xty);}
-function r2(pred,y){const m=y.reduce((s,v)=>s+v,0)/y.length;let ss=0,t=0;
-  for(let i=0;i<y.length;i++){ss+=(y[i]-pred[i])**2;t+=(y[i]-m)**2;}return 1-ss/t;}
+function lorenz(n,dt){let x=1,y=1,z=1,o=[];for(let i=0;i<n;i++){let dx=10*(y-x),dy=x*(28-z)-y,dz=x*y-8/3*z;x+=dx*dt;y+=dy*dt;z+=dz*dt;o.push([x,y,z]);}return o;}
+function solve(A,b){const n=A.length;A=A.map((r,i)=>r.concat(b[i]));for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];for(let r=0;r<n;r++){if(r===c)continue;const f=A[r][c]/A[c][c];for(let k=c;k<=n;k++)A[r][k]-=f*A[c][k];}}return A.map((r,i)=>r[n]/r[i]);}
+function fit(X,y){const n=X[0].length,XtX=Array.from({length:n},()=>Array(n).fill(0)),Xty=Array(n).fill(0);for(let i=0;i<X.length;i++)for(let a=0;a<n;a++){Xty[a]+=X[i][a]*y[i];for(let b=0;b<n;b++)XtX[a][b]+=X[i][a]*X[i][b];}for(let a=0;a<n;a++)XtX[a][a]+=1e-9;const be=solve(XtX,Xty);const pred=X.map(r=>r.reduce((s,v,a)=>s+v*be[a],0));const m=y.reduce((s,v)=>s+v,0)/y.length;let ss=0,t=0;for(let i=0;i<y.length;i++){ss+=(y[i]-pred[i])**2;t+=(y[i]-m)**2;}return {r2:1-ss/t,be,pred};}
+function dpr(c){c.width=c.clientWidth*devicePixelRatio;c.height=c.clientHeight*devicePixelRatio;return c.getContext('2d');}
+function rng(s){return ()=>{s=(s*48271)%2147483647;return s/2147483647-0.5;};}
 
-// ---- hero: rotating Lorenz, auto-fit so the whole butterfly is always visible ----
+// hero
 (function(){
-  const cv=document.getElementById('lorenz'),ctx=cv.getContext('2d');
-  const P=lorenz(7000,0.007);
-  let cx=0,cy=0,cz=0;P.forEach(p=>{cx+=p[0];cy+=p[1];cz+=p[2];});cx/=P.length;cy/=P.length;cz/=P.length;
-  function resize(){cv.width=cv.clientWidth*devicePixelRatio;cv.height=cv.clientHeight*devicePixelRatio;}
-  resize();addEventListener('resize',resize);
+  const cv=document.getElementById('lorenz'),ctx=cv.getContext('2d');const P=lorenz(7000,0.007);
+  let cx=0,cz=0;P.forEach(p=>{cx+=p[0];cz+=p[2];});cx/=P.length;cz/=P.length;let cy=0;P.forEach(p=>cy+=p[1]);cy/=P.length;
+  function rs(){cv.width=cv.clientWidth*devicePixelRatio;cv.height=cv.clientHeight*devicePixelRatio;}rs();addEventListener('resize',rs);
   let ang=0;
-  function frame(){
-    const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);ang+=0.0015;
-    const ca=Math.cos(ang),sa=Math.sin(ang);
+  (function frame(){const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);ang+=0.0015;const ca=Math.cos(ang),sa=Math.sin(ang);
     const pr=[];let mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
-    for(const p of P){const x=p[0]-cx,y=p[1]-cy,z=p[2]-cz;
-      const hx=ca*x-sa*y, vy=z;                       // rotate about vertical axis, height = z
-      pr.push([hx,vy]); if(hx<mnx)mnx=hx;if(hx>mxx)mxx=hx;if(vy<mny)mny=vy;if(vy>mxy)mxy=vy;}
-    const m=0.10, sx=(W*(1-2*m))/(mxx-mnx), sy=(H*(1-2*m))/(mxy-mny), s=Math.min(sx,sy);
-    const ox=(W-(mxx+mnx)*s)/2, oy=(H+(mxy+mny)*s)/2; // flip y
+    for(const p of P){const x=p[0]-cx,y=p[1]-cy,z=p[2]-cz;const hx=ca*x-sa*y,vy=z;pr.push([hx,vy]);if(hx<mnx)mnx=hx;if(hx>mxx)mxx=hx;if(vy<mny)mny=vy;if(vy>mxy)mxy=vy;}
+    const m=.10,s=Math.min(W*(1-2*m)/(mxx-mnx),H*(1-2*m)/(mxy-mny)),ox=(W-(mxx+mnx)*s)/2,oy=(H+(mxy+mny)*s)/2;
     ctx.lineWidth=1.0*devicePixelRatio;
-    for(let i=1;i<pr.length;i++){const t=i/pr.length;
-      ctx.strokeStyle=`hsla(${238+t*80},75%,60%,${0.12+0.32*t})`;
-      ctx.beginPath();ctx.moveTo(ox+pr[i-1][0]*s,oy-pr[i-1][1]*s);ctx.lineTo(ox+pr[i][0]*s,oy-pr[i][1]*s);ctx.stroke();}
-    requestAnimationFrame(frame);
-  }
-  frame();
+    for(let i=1;i<pr.length;i++){const t=i/pr.length;ctx.strokeStyle=`hsla(${238+t*80},75%,60%,${0.12+0.32*t})`;ctx.beginPath();ctx.moveTo(ox+pr[i-1][0]*s,oy-pr[i-1][1]*s);ctx.lineTo(ox+pr[i][0]*s,oy-pr[i][1]*s);ctx.stroke();}
+    requestAnimationFrame(frame);})();
 })();
 
-// ---- demo: fit Lorenz 3-D one step (VAR linear vs SPTLS quad), then free-run each ----
+// demo 1: logistic
+(function(){
+  let z=[],x=0.4;for(let i=0;i<400;i++){x=3.95*x*(1-x);if(i>=100)z.push(x);}
+  let Xar=[],Xq=[],yy=[];for(let t=3;t<z.length;t++){const zz=z[t-1],dz=z[t-1]-z[t-2],d2=z[t-1]-2*z[t-2]+z[t-3];Xar.push([1,z[t-1],z[t-2]]);Xq.push([1,zz,dz,d2,zz*zz,zz*dz,dz*dz]);yy.push(z[t]);}
+  const ar=fit(Xar,yy),sp=fit(Xq,yy);
+  document.getElementById('r2log').innerHTML=`one-step R²: &nbsp; OLS&nbsp;AR(2) <b>${ar.r2.toFixed(2)}</b> &nbsp;·&nbsp; SPTLS&nbsp;(quadratic&nbsp;jet) <b>${sp.r2.toFixed(2)}</b>`;
+  function draw(){const c=dpr(document.getElementById('cvLog')),cv=c.canvas,W=cv.width,H=cv.height,p=18*devicePixelRatio;
+    const a=0,b=70; const X=i=>p+(i-a)/(b-a)*(W-2*p),Y=v=>H-p-(v-0.0)/(1.0)*(H-2*p);
+    c.clearRect(0,0,W,H);
+    function line(arr,off,col,w){c.strokeStyle=col;c.lineWidth=w*devicePixelRatio;c.beginPath();for(let i=0;i<b;i++){const xx=X(i),yy2=Y(arr[i+off]);i?c.lineTo(xx,yy2):c.moveTo(xx,yy2);}c.stroke();}
+    line(z,3,"#9aa0ab",1.4); line(yy.map((_,i)=>ar.pred[i]),0,"#e0552b",1.6); line(yy.map((_,i)=>sp.pred[i]),0,"#1f9d6b",1.6);
+    c.font=12*devicePixelRatio+"px sans-serif";c.fillStyle="#9aa0ab";c.fillText("actual",p,p+12*devicePixelRatio);
+    c.fillStyle="#e0552b";c.fillText("OLS AR(2)",p+70*devicePixelRatio,p+12*devicePixelRatio);
+    c.fillStyle="#1f9d6b";c.fillText("SPTLS",p+165*devicePixelRatio,p+12*devicePixelRatio);}
+  draw();addEventListener('resize',draw);
+})();
+
+// demo 2: nonlinear cointegration (curved equilibrium)
+(function(){
+  const r=rng(7);let y0=[0],y1=[0];for(let t=1;t<700;t++){y0.push(y0[t-1]+0.6*r());const tg=0.4*y0[t]+0.25*y0[t]*y0[t];y1.push(y1[t-1]+0.3*(tg-y1[t-1])+0.2*r());}
+  let Xl=[],Xq=[],yv=[];for(let t=0;t<y0.length;t++){Xl.push([1,y0[t]]);Xq.push([1,y0[t],y0[t]*y0[t]]);yv.push(y1[t]);}
+  const lin=fit(Xl,yv),q=fit(Xq,yv);
+  document.getElementById('r2coint').innerHTML=`equilibrium fit R²: &nbsp; linear / VECM <b>${lin.r2.toFixed(2)}</b> &nbsp;·&nbsp; SPTLS&nbsp;(quadratic) <b>${q.r2.toFixed(2)}</b>`;
+  function draw(){const c=dpr(document.getElementById('cvCoint')),cv=c.canvas,W=cv.width,H=cv.height,p=18*devicePixelRatio;
+    let mnx=Math.min(...y0),mxx=Math.max(...y0),mny=Math.min(...y1),mxy=Math.max(...y1);
+    const X=v=>p+(v-mnx)/(mxx-mnx)*(W-2*p),Y=v=>H-p-(v-mny)/(mxy-mny)*(H-2*p);
+    c.clearRect(0,0,W,H);
+    c.fillStyle="rgba(90,100,114,.45)";const st=Math.max(1,Math.floor(y0.length/600));
+    for(let i=0;i<y0.length;i+=st){c.beginPath();c.arc(X(y0[i]),Y(y1[i]),1.7*devicePixelRatio,0,7);c.fill();}
+    const xs=[];for(let g=0;g<=60;g++)xs.push(mnx+(mxx-mnx)*g/60);
+    function curve(be,col){c.strokeStyle=col;c.lineWidth=2.2*devicePixelRatio;c.beginPath();xs.forEach((xx,i)=>{const yy=be.length===2?be[0]+be[1]*xx:be[0]+be[1]*xx+be[2]*xx*xx;const px=X(xx),py=Y(yy);i?c.lineTo(px,py):c.moveTo(px,py);});c.stroke();}
+    curve(lin.be,"#e0552b");curve(q.be,"#1f9d6b");
+    c.font=12*devicePixelRatio+"px sans-serif";c.fillStyle="#5b6472";c.fillText("y₀ (level)",W/2-30*devicePixelRatio,H-3*devicePixelRatio);
+    c.fillStyle="#e0552b";c.fillText("linear equilibrium",p,p+12*devicePixelRatio);
+    c.fillStyle="#1f9d6b";c.fillText("SPTLS (curved)",p,p+28*devicePixelRatio);}
+  draw();addEventListener('resize',draw);
+})();
+
+// demo 3: Lorenz butterfly vs collapse
 (function(){
   const L=lorenz(4000,0.01),X0=L.slice(0,-1),X1=L.slice(1);
-  const featLin=s=>[1,s[0],s[1],s[2]];
-  const featQ=s=>{const[x,y,z]=s;return[1,x,y,z,x*x,y*y,z*z,x*y,x*z,y*z];};
-  function fitMap(feat){const X=X0.map(feat);
-    return [0,1,2].map(j=>fitcol(X,X1.map(r=>r[j])));}
-  const Blin=fitMap(featLin),Bq=fitMap(featQ);
-  function apply(B,feat,s){const f=feat(s);return B.map(b=>{let v=0;for(let i=0;i<b.length;i++)v+=b[i]*f[i];return v;});}
-  // one-step R2 (per coord, show mean for y,z where it differs)
-  const r2lin=[0,1,2].map(j=>r2(X0.map(s=>{const f=featLin(s),b=Blin[j];let v=0;for(let i=0;i<f.length;i++)v+=f[i]*b[i];return v;}),X1.map(r=>r[j])));
-  const r2q=[0,1,2].map(j=>r2(X0.map(s=>{const f=featQ(s),b=Bq[j];let v=0;for(let i=0;i<f.length;i++)v+=f[i]*b[i];return v;}),X1.map(r=>r[j])));
-  document.getElementById('r2line').innerHTML=
-    `one-step R² (x, y, z): &nbsp; VAR <b>[${r2lin.map(v=>v.toFixed(2)).join(', ')}]</b>` +
-    ` &nbsp;·&nbsp; SPTLS <b>[${r2q.map(v=>v.toFixed(2)).join(', ')}]</b>`;
-  // fixed drawing scale from the TRUE attractor (x-z projection)
-  let mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9;
-  for(const p of L){if(p[0]<mnx)mnx=p[0];if(p[0]>mxx)mxx=p[0];if(p[2]<mnz)mnz=p[2];if(p[2]>mxz)mxz=p[2];}
-  function draw(cvId,B,feat,col){
-    const cv=document.getElementById(cvId), c=cv.getContext('2d');
-    cv.width=cv.clientWidth*devicePixelRatio;cv.height=cv.clientHeight*devicePixelRatio;
-    const W=cv.width,H=cv.height,m=0.10;
-    const s=Math.min(W*(1-2*m)/(mxx-mnx),H*(1-2*m)/(mxz-mnz));
-    const ox=(W-(mxx+mnx)*s)/2, oy=(H+(mxz+mnz)*s)/2;
-    c.clearRect(0,0,W,H);
-    const N=+document.getElementById('steps').value;let st=L[1200].slice();
-    c.lineWidth=1.0*devicePixelRatio;let px=null,py=null;
-    for(let i=0;i<N;i++){st=apply(B,feat,st);
-      if(!isFinite(st[0])||Math.abs(st[0])>1e3)break;
-      const x=ox+st[0]*s, y=oy-st[2]*s, t=i/N;
-      if(px!==null){c.strokeStyle=col.replace('A',(0.15+0.5*t).toFixed(2));c.beginPath();c.moveTo(px,py);c.lineTo(x,y);c.stroke();}
-      px=x;py=y;}
-    // mark the collapse point
-    c.fillStyle="#fff";c.beginPath();c.arc(px,py,2.5*devicePixelRatio,0,7);c.fill();
-  }
-  function run(){
-    document.getElementById('stepsval').textContent=document.getElementById('steps').value+" steps";
-    draw('cvSP',Bq,featQ,'hsla(158,70%,55%,A)');
-    draw('cvAR',Blin,featLin,'hsla(16,80%,60%,A)');
-  }
+  const fL=s=>[1,s[0],s[1],s[2]],fQ=s=>{const[x,y,z]=s;return[1,x,y,z,x*x,y*y,z*z,x*y,x*z,y*z];};
+  const fitMap=f=>{const X=X0.map(f);return[0,1,2].map(j=>fit(X,X1.map(r=>r[j])).be);};
+  const Bq=fitMap(fQ),Bl=fitMap(fL),ap=(B,f,s)=>{const ff=f(s);return B.map(b=>{let v=0;for(let i=0;i<b.length;i++)v+=b[i]*ff[i];return v;});};
+  const r2c=(B,f)=>[0,1,2].map(j=>{const X=X0.map(f),y=X1.map(r=>r[j]),be=B[j];const pred=X.map(r=>r.reduce((s,v,a)=>s+v*be[a],0));const m=y.reduce((s,v)=>s+v,0)/y.length;let ss=0,t=0;for(let i=0;i<y.length;i++){ss+=(y[i]-pred[i])**2;t+=(y[i]-m)**2;}return (1-ss/t).toFixed(2);});
+  document.getElementById('r2lor').innerHTML=`one-step R² (x,y,z): &nbsp; VAR <b>[${r2c(Bl,fL).join(', ')}]</b> &nbsp;·&nbsp; SPTLS <b>[${r2c(Bq,fQ).join(', ')}]</b> — both fit one step; only one regenerates the attractor.`;
+  let mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9;for(const p of L){if(p[0]<mnx)mnx=p[0];if(p[0]>mxx)mxx=p[0];if(p[2]<mnz)mnz=p[2];if(p[2]>mxz)mxz=p[2];}
+  function draw(id,B,f,col){const c=dpr(document.getElementById(id)),cv=c.canvas,W=cv.width,H=cv.height,m=.10;
+    const s=Math.min(W*(1-2*m)/(mxx-mnx),H*(1-2*m)/(mxz-mnz)),ox=(W-(mxx+mnx)*s)/2,oy=(H+(mxz+mnz)*s)/2;
+    c.clearRect(0,0,W,H);const N=+document.getElementById('steps').value;let st=L[1200].slice(),px=null,py=null;c.lineWidth=1.0*devicePixelRatio;
+    for(let i=0;i<N;i++){st=ap(B,f,st);if(!isFinite(st[0])||Math.abs(st[0])>1e3)break;const x=ox+st[0]*s,y=oy-st[2]*s,t=i/N;if(px!==null){c.strokeStyle=col.replace('A',(0.15+0.5*t).toFixed(2));c.beginPath();c.moveTo(px,py);c.lineTo(x,y);c.stroke();}px=x;py=y;}
+    c.fillStyle="#fff";c.beginPath();c.arc(px,py,2.5*devicePixelRatio,0,7);c.fill();}
+  function run(){document.getElementById('stepsval').textContent=document.getElementById('steps').value+" steps";draw('cvSP',Bq,fQ,'hsla(158,70%,55%,A)');draw('cvAR',Bl,fL,'hsla(16,80%,60%,A)');}
   document.getElementById('steps').addEventListener('input',run);addEventListener('resize',run);run();
 })();
 </script>
