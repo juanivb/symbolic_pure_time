@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Symbolic Pure Time — OLS for any trajectory</title>
+<meta name="description" content="SPTLS: ordinary least squares moved from lagged values to the kinematic jet. One white-box, dependency-light tool for any time series — stationary, cointegrated, nonlinear, even chaotic.">
+<meta property="og:title" content="Symbolic Pure Time — OLS for any trajectory">
+<meta property="og:description" content="Recover the Lorenz attractor in your browser. SPTLS is OLS on the kinematic jet: covers every regime, white-box, one closed-form solve.">
+<meta property="og:type" content="website">
+<style>
+  :root{
+    --ink:#14171f;--muted:#5b6472;--line:#e6e8ee;--bg:#fbfbfd;--card:#fff;
+    --indigo:#4f46e5;--rotor:#e0552b;--good:#1f9d6b;--maxw:760px;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:18px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.18;letter-spacing:-.01em}
+  h2{font-size:1.9rem;margin:0 0 .2em} h3{font-size:1.25rem;margin:1.6em 0 .3em}
+  p{margin:.7em 0} a{color:var(--indigo);text-decoration:none} a:hover{text-decoration:underline}
+  .muted{color:var(--muted)} .small{font-size:.92rem}
+  code,.mono{font-family:var(--mono);font-size:.92em;background:#f1f2f6;padding:.1em .35em;border-radius:5px}
+  section{padding:54px 0;border-top:1px solid var(--line)}
+  .hero{position:relative;height:90vh;min-height:580px;border-top:none;overflow:hidden;display:flex;align-items:center;background:radial-gradient(125% 95% at 72% 8%,#fff,#f2f3fb 68%,#e9ebf8)}
+  #lorenz{position:absolute;inset:0;width:100%;height:100%}
+  .hero .wrap{position:relative;z-index:2}
+  .badge{display:inline-block;font-family:var(--mono);font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--indigo);background:#ececfb;border:1px solid #dcd9fb;padding:5px 11px;border-radius:999px}
+  .hero h1{font-size:clamp(2.4rem,6vw,4rem);margin:.35em 0 .15em}
+  .hero .tag{font-size:1.25rem;color:var(--muted);max-width:30ch}
+  .cta{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:11px 18px;border-radius:10px;font-weight:600;font-size:.96rem}
+  .btn.p{background:var(--indigo);color:#fff} .btn.p:hover{background:#3f37c9;text-decoration:none}
+  .btn.s{background:#fff;border:1px solid var(--line);color:var(--ink)} .btn.s:hover{border-color:#c8ccd6;text-decoration:none}
+  .eq{font-family:var(--serif);font-size:1.5rem;text-align:center;margin:.8em 0} .eq .v{color:var(--indigo)}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px;box-shadow:0 1px 3px rgba(20,23,31,.04)}
+  .twin{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:620px){.twin{grid-template-columns:1fr}}
+  .cv-card .t{font-weight:700;font-size:.95rem;margin:0 0 6px} .cv-card .t.sp{color:var(--good)} .cv-card .t.ar{color:var(--rotor)}
+  .cv-card canvas{width:100%;height:240px;display:block;border-radius:10px;background:#0e1020;border:1px solid var(--line)}
+  .cv-card .sub{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+  .r2line{margin-top:14px;font-size:.95rem;color:var(--muted)}
+  .r2line b{color:var(--ink)}
+  .ctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 16px}
+  .ctl label{font-size:.92rem;color:var(--muted);font-weight:600} input[type=range]{flex:1;min-width:160px;accent-color:var(--indigo)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:22px}
+  .c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .c .n{font-family:var(--mono);color:var(--indigo);font-size:.85rem}
+  .c h3{margin:.2em 0 .3em;font-size:1.08rem} .c p{margin:0;font-size:.95rem;color:var(--muted)}
+  footer{border-top:1px solid var(--line);padding:40px 0 70px;color:var(--muted);font-size:.92rem}
+  .note{font-size:.86rem;color:var(--muted);margin-top:10px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <canvas id="lorenz"></canvas>
+  <div class="wrap">
+    <span class="badge">Symbolic Pure Time · MIT</span>
+    <h1>OLS, for <em>any</em> trajectory.</h1>
+    <p class="tag">One white-box estimator for every kind of time series — no pre-testing, no parameters to tune.</p>
+    <div class="cta">
+      <a class="btn p" href="#demo">Recover this attractor ↓</a>
+      <a class="btn s" href="https://github.com/juanivb/symbolic_pure_time">Code & notebooks (MIT)</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Real series don't fit one box</h2>
+    <p>A series can be stationary, trending, cointegrated, nonlinear — even chaotic.
+    The classical workflow makes you decide <em>which</em> before you can model: test for
+    unit roots, choose how many times to difference, pick a lag order, choose a VAR
+    variant or a VECM and its cointegration rank. A maze of decisions, each a chance to
+    get it wrong.</p>
+    <p><strong>Symbolic Pure-Time Least Squares (SPTLS)</strong> removes the maze. It is
+    ordinary least squares — moved from lagged values to the <em>kinematic jet</em>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>From lagged values to the jet</h2>
+    <p>Instead of regressing on past <em>values</em>, SPTLS regresses on the instantaneous
+    state of the trajectory — level, velocity and acceleration:</p>
+    <p class="eq">q(t) = ( <span class="v">z</span>, <span class="v">Δz</span>, <span class="v">Δ²z</span> )</p>
+    <p>One closed-form least-squares solve on <code>q(t)</code> keeps everything OLS gives
+    you — speed, a closed form, fully readable coefficients — while the jet lets that same
+    solve describe motion a lagged-value model never can. Add the quadratic terms of the
+    jet and it captures nonlinear vector fields exactly.</p>
+  </div>
+</section>
+
+<section id="demo">
+  <div class="wrap">
+    <h2>Recover the Lorenz attractor — live</h2>
+    <p>The butterfly above is the Lorenz system: deterministic but chaotic, and
+    <em>quadratic</em>. We fit its full 3-D state one step ahead, in your browser, two ways —
+    a linear <strong>VAR</strong>, and <strong>SPTLS</strong> on the quadratic jet — then let
+    each fitted model <em>run free</em> from one starting point. Only the model that captured
+    the quadratic field regenerates the attractor.</p>
+    <div class="panel">
+      <div class="ctl">
+        <label>free-run length</label>
+        <input id="steps" type="range" min="500" max="6000" value="3500" step="250">
+        <span id="stepsval" class="mono"></span>
+      </div>
+      <div class="twin">
+        <div class="cv-card"><p class="t sp">SPTLS — quadratic jet</p><canvas id="cvSP"></canvas>
+          <p class="sub">recovers the field → regenerates both wings</p></div>
+        <div class="cv-card"><p class="t ar">VAR — linear</p><canvas id="cvAR"></canvas>
+          <p class="sub">can't represent xy, xz → collapses to a point</p></div>
+      </div>
+      <p class="r2line" id="r2line"></p>
+      <p class="note">One-step fit is good for both (Lorenz is locally smooth). The difference
+      shows under free iteration: SPTLS recovered the exact quadratic vector field, so its
+      free-run lands back on the attractor; the linear model cannot, and decays to a fixed point.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Why it works: it's OLS, extended</h2>
+    <p>Because SPTLS <em>is</em> least squares on the jet, it inherits OLS's virtues and
+    extends their reach to the whole zoo of trajectories.</p>
+    <div class="cards">
+      <div class="c"><div class="n">01</div><h3>Covers every regime</h3><p>Stationary, integrated, cointegrated, trending, nonlinear, chaotic — one call, out of the box.</p></div>
+      <div class="c"><div class="n">02</div><h3>Ties the right model</h3><p>Matches a tuned VAR and a Johansen VECM on linear data — and wins when the dynamics turn nonlinear.</p></div>
+      <div class="c"><div class="n">03</div><h3>White box</h3><p>Every coefficient is readable: rotation, gains, cross-effects, shared directions. Interpretability built in.</p></div>
+      <div class="c"><div class="n">04</div><h3>Minimal cost</h3><p>One closed-form solve — about 15× cheaper than the econometric workflow, with none of the pre-testing.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Open, and ready to run</h2>
+    <p>The reference library <code>gsd</code> is pure NumPy and <strong>MIT-licensed</strong>, with
+    ready-to-run exploratory notebooks — univariate (OLS vs SPTLS, step by step) and multivariate
+    (VAR/VECM vs SPTLS across regimes).</p>
+    <div class="cta">
+      <a class="btn p" href="https://github.com/juanivb/symbolic_pure_time">Get it on GitHub</a>
+      <a class="btn s" href="https://github.com/juanivb/symbolic_pure_time/tree/main/tutorial">Browse the notebooks</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Symbolic Pure Time · a Geometric Signal Dynamics project · <a href="https://www.linkedin.com/in/jivb/">get in touch</a></p>
+    <p class="small">Everything on this page — the attractor and both fits — runs client-side in your browser.</p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+function lorenz(n,dt){let x=1,y=1,z=1,o=[];for(let i=0;i<n;i++){
+  let dx=10*(y-x),dy=x*(28-z)-y,dz=x*y-8/3*z;x+=dx*dt;y+=dy*dt;z+=dz*dt;o.push([x,y,z]);}return o;}
+function solve(A,b){const n=A.length;A=A.map((r,i)=>r.concat(b[i]));
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];
+    for(let r=0;r<n;r++){if(r===c)continue;const f=A[r][c]/A[c][c];for(let k=c;k<=n;k++)A[r][k]-=f*A[c][k];}}
+  return A.map((r,i)=>r[n]/r[i]);}
+function fitcol(X,y){const n=X[0].length,XtX=Array.from({length:n},()=>Array(n).fill(0)),Xty=Array(n).fill(0);
+  for(let i=0;i<X.length;i++)for(let a=0;a<n;a++){Xty[a]+=X[i][a]*y[i];for(let b=0;b<n;b++)XtX[a][b]+=X[i][a]*X[i][b];}
+  for(let a=0;a<n;a++)XtX[a][a]+=1e-7;return solve(XtX,Xty);}
+function r2(pred,y){const m=y.reduce((s,v)=>s+v,0)/y.length;let ss=0,t=0;
+  for(let i=0;i<y.length;i++){ss+=(y[i]-pred[i])**2;t+=(y[i]-m)**2;}return 1-ss/t;}
+
+// ---- hero: rotating Lorenz, auto-fit so the whole butterfly is always visible ----
+(function(){
+  const cv=document.getElementById('lorenz'),ctx=cv.getContext('2d');
+  const P=lorenz(7000,0.007);
+  let cx=0,cy=0,cz=0;P.forEach(p=>{cx+=p[0];cy+=p[1];cz+=p[2];});cx/=P.length;cy/=P.length;cz/=P.length;
+  function resize(){cv.width=cv.clientWidth*devicePixelRatio;cv.height=cv.clientHeight*devicePixelRatio;}
+  resize();addEventListener('resize',resize);
+  let ang=0;
+  function frame(){
+    const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);ang+=0.0015;
+    const ca=Math.cos(ang),sa=Math.sin(ang);
+    const pr=[];let mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+    for(const p of P){const x=p[0]-cx,y=p[1]-cy,z=p[2]-cz;
+      const hx=ca*x-sa*y, vy=z;                       // rotate about vertical axis, height = z
+      pr.push([hx,vy]); if(hx<mnx)mnx=hx;if(hx>mxx)mxx=hx;if(vy<mny)mny=vy;if(vy>mxy)mxy=vy;}
+    const m=0.10, sx=(W*(1-2*m))/(mxx-mnx), sy=(H*(1-2*m))/(mxy-mny), s=Math.min(sx,sy);
+    const ox=(W-(mxx+mnx)*s)/2, oy=(H+(mxy+mny)*s)/2; // flip y
+    ctx.lineWidth=1.0*devicePixelRatio;
+    for(let i=1;i<pr.length;i++){const t=i/pr.length;
+      ctx.strokeStyle=`hsla(${238+t*80},75%,60%,${0.12+0.32*t})`;
+      ctx.beginPath();ctx.moveTo(ox+pr[i-1][0]*s,oy-pr[i-1][1]*s);ctx.lineTo(ox+pr[i][0]*s,oy-pr[i][1]*s);ctx.stroke();}
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// ---- demo: fit Lorenz 3-D one step (VAR linear vs SPTLS quad), then free-run each ----
+(function(){
+  const L=lorenz(4000,0.01),X0=L.slice(0,-1),X1=L.slice(1);
+  const featLin=s=>[1,s[0],s[1],s[2]];
+  const featQ=s=>{const[x,y,z]=s;return[1,x,y,z,x*x,y*y,z*z,x*y,x*z,y*z];};
+  function fitMap(feat){const X=X0.map(feat);
+    return [0,1,2].map(j=>fitcol(X,X1.map(r=>r[j])));}
+  const Blin=fitMap(featLin),Bq=fitMap(featQ);
+  function apply(B,feat,s){const f=feat(s);return B.map(b=>{let v=0;for(let i=0;i<b.length;i++)v+=b[i]*f[i];return v;});}
+  // one-step R2 (per coord, show mean for y,z where it differs)
+  const r2lin=[0,1,2].map(j=>r2(X0.map(s=>{const f=featLin(s),b=Blin[j];let v=0;for(let i=0;i<f.length;i++)v+=f[i]*b[i];return v;}),X1.map(r=>r[j])));
+  const r2q=[0,1,2].map(j=>r2(X0.map(s=>{const f=featQ(s),b=Bq[j];let v=0;for(let i=0;i<f.length;i++)v+=f[i]*b[i];return v;}),X1.map(r=>r[j])));
+  document.getElementById('r2line').innerHTML=
+    `one-step R² (x, y, z): &nbsp; VAR <b>[${r2lin.map(v=>v.toFixed(2)).join(', ')}]</b>` +
+    ` &nbsp;·&nbsp; SPTLS <b>[${r2q.map(v=>v.toFixed(2)).join(', ')}]</b>`;
+  // fixed drawing scale from the TRUE attractor (x-z projection)
+  let mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9;
+  for(const p of L){if(p[0]<mnx)mnx=p[0];if(p[0]>mxx)mxx=p[0];if(p[2]<mnz)mnz=p[2];if(p[2]>mxz)mxz=p[2];}
+  function draw(cvId,B,feat,col){
+    const cv=document.getElementById(cvId), c=cv.getContext('2d');
+    cv.width=cv.clientWidth*devicePixelRatio;cv.height=cv.clientHeight*devicePixelRatio;
+    const W=cv.width,H=cv.height,m=0.10;
+    const s=Math.min(W*(1-2*m)/(mxx-mnx),H*(1-2*m)/(mxz-mnz));
+    const ox=(W-(mxx+mnx)*s)/2, oy=(H+(mxz+mnz)*s)/2;
+    c.clearRect(0,0,W,H);
+    const N=+document.getElementById('steps').value;let st=L[1200].slice();
+    c.lineWidth=1.0*devicePixelRatio;let px=null,py=null;
+    for(let i=0;i<N;i++){st=apply(B,feat,st);
+      if(!isFinite(st[0])||Math.abs(st[0])>1e3)break;
+      const x=ox+st[0]*s, y=oy-st[2]*s, t=i/N;
+      if(px!==null){c.strokeStyle=col.replace('A',(0.15+0.5*t).toFixed(2));c.beginPath();c.moveTo(px,py);c.lineTo(x,y);c.stroke();}
+      px=x;py=y;}
+    // mark the collapse point
+    c.fillStyle="#fff";c.beginPath();c.arc(px,py,2.5*devicePixelRatio,0,7);c.fill();
+  }
+  function run(){
+    document.getElementById('stepsval').textContent=document.getElementById('steps').value+" steps";
+    draw('cvSP',Bq,featQ,'hsla(158,70%,55%,A)');
+    draw('cvAR',Blin,featLin,'hsla(16,80%,60%,A)');
+  }
+  document.getElementById('steps').addEventListener('input',run);addEventListener('resize',run);run();
+})();
+</script>
+</body>
+</html>
