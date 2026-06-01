@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![License: CC BY 4.0](https://img.shields.io/badge/text-CC%20BY%204.0-lightgrey.svg)](./LICENSE-text.md)
 
-**📖 Project website: [juanivb.github.io/symbolic-pure-time](https://juanivb.github.io/symbolic-pure-time)** — overview, paper index, tutorials, and live documentation.
+**📖 Project website: [juanivb.github.io/symbolic_pure_time](https://juanivb.github.io/symbolic_pure_time)** — overview, paper index, tutorials, and live documentation.
 
 This repository consolidates the foundational papers of the programme, the companion library, the introductory tutorial, and the applied papers that build on the foundations.
 
