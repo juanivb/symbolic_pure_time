@@ -1,0 +1,2 @@
+mean,variance,third_moment,fourth_moment,excess_kurt_step,variance_expected,third_moment_expected,fourth_moment_expected,excess_kurt_step_expected
+0.0045,2.9365797499999995,0.007425,14.891,-1.2732070603137957,2.9166666666666665,0.0,14.729166666666666,-1.2685714285714282

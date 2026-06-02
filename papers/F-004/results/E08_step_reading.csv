@@ -1,0 +1,5 @@
+quantity,empirical,expected
+mean,0.9986302953292768,1.0
+variance,1.0047043981960833,1.0
+skewness,2.0106720501463307,2.0
+excess_kurtosis,6.045394919930624,6.0
