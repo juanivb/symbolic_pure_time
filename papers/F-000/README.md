@@ -14,8 +14,10 @@ pieces.
 
 ## Paper
 
-- **PDF:** [`symbolic_pure_time.pdf`](symbolic_pure_time.pdf)
-- **LaTeX source:** [`source/symbolic_pure_time.tex`](source/symbolic_pure_time.tex)
+The compiled PDF and LaTeX source are withheld from the public
+repository while the paper is under peer review. The Zenodo archive
+of the manuscript is publicly accessible at the DOI below.
+
 - **Zenodo DOI:** [10.5281/zenodo.20298431](https://doi.org/10.5281/zenodo.20298431)
 
 ## What is in this folder
@@ -23,9 +25,6 @@ pieces.
 ```
 F-000/
 ├── README.md                       ← this file
-├── symbolic_pure_time.pdf          ← compiled paper
-├── source/
-│   └── symbolic_pure_time.tex      ← LaTeX source
 ├── replication/
 │   ├── build_case_figures.py       ← regenerates §5 figures (logistic + mixed VAR)
 │   ├── build_case_table.py         ← regenerates the §5 quality-of-fit table
@@ -80,4 +79,4 @@ corresponding best-practice OLS-with-feature-engineering workflow:
 
 ## License
 
-Code: MIT. Paper text: CC-BY 4.0.
+Code: MIT.
