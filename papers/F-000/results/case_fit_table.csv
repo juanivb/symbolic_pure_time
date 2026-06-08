@@ -1,0 +1,7 @@
+case,method,R2,rho1,DW
+Case 1 (logistic),OLS AR(2),0.4282,-0.006,2.01
+Case 1 (logistic),OLS + quad FE,1.0000,-0.762,2.01
+Case 1 (logistic),SPTLS_2,1.0000,+0.159,1.10
+"Case 2 (mixed VAR), z eq.",VAR(1),0.9976,+0.726,0.55
+"Case 2 (mixed VAR), z eq.",VAR + quad FE,1.0000,-0.018,2.03
+"Case 2 (mixed VAR), z eq.",SPTLS joint,0.9989,-0.000,2.00

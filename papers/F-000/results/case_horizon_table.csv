@@ -1,0 +1,7 @@
+case,estimator,h=1,h=5,h=10,h=20
+1. Logistic $\mu=3.8$,AR(2) plain OLS,-0.769,-0.016,-0.000,-0.000
+1. Logistic $\mu=3.8$,$\sPT_1$ (minimal jet),0.425,0.006,-0.000,-0.000
+1. Logistic $\mu=3.8$,"$\sPT_2$ (jet $+\,\mathrm{Sym}^{2}$)",1.000,1.000,1.000,1.000
+3. Quadratic cointegration,Engle--Granger linear OLS,-13.060,-12.938,-12.818,-12.653
+3. Quadratic cointegration,$\sPT_1$ joint (minimal joint jet),0.933,0.551,-0.159,-1.549
+3. Quadratic cointegration,"$\sPT_2$ joint (jet $+\,\mathrm{Sym}^{2}$)",0.928,-0.319,-0.609,-0.688
