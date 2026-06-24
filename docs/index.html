@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Symbolic Pure Time — an algebraic correction to least squares on time series</title>
-<meta name="description" content="Symbolic Pure Time: an algebraic correction to least squares on time series. Hamilton called algebra 'the science of pure time'; the kinematic jet (y, Δy, Δ²y) lets ordinary least squares read the trajectory as a curve in phase space — forward-looking, geometric, t-free.">
-<meta property="og:title" content="Symbolic Pure Time — an algebraic correction to least squares on time series">
-<meta property="og:description" content="Move OLS from the lag stack to the kinematic jet (y, Δy, Δ²y). The same closed-form fit, read as the curve the series builds in phase space — forward-looking, geometric, t-free.">
+<title>Symbolic Pure Time — reading time within linear algebra</title>
+<meta name="description" content="Symbolic Pure Time: OLS on time series carries three structural limitations. SPT removes all three with one change to the design matrix — yielding memory, innovation, and polar readings from a single closed-form solve.">
+<meta property="og:title" content="Symbolic Pure Time — reading time within linear algebra">
+<meta property="og:description" content="Run OLS on the kinematic jet (y, Δy, Δ²y). Same closed-form solve. Three simultaneous readings: memory, innovation, polar. No pre-tests. Residuals as first-class dynamics.">
 <meta property="og:type" content="website">
 <style>
   :root{
@@ -36,42 +36,57 @@
   .hero .wrap{position:relative;z-index:2}
   .badge{display:inline-block;font-family:var(--mono);font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--indigo);background:#ececfb;border:1px solid #dcd9fb;padding:5px 11px;border-radius:999px}
   .hero h1{font-size:clamp(2.3rem,6vw,3.9rem);margin:.35em 0 .12em}
-  .hero .tag{font-size:1.22rem;color:var(--muted);max-width:32ch}
+  .hero .tag{font-size:1.22rem;color:var(--muted);max-width:36ch}
   .cta{margin-top:24px;display:flex;gap:12px;flex-wrap:wrap}
   .btn{display:inline-block;padding:11px 18px;border-radius:10px;font-weight:600;font-size:.95rem}
   .btn.p{background:var(--indigo);color:#fff} .btn.p:hover{background:#3f37c9;text-decoration:none}
   .btn.s{background:#fff;border:1px solid var(--line);color:var(--ink)} .btn.s:hover{border-color:#c8ccd6;text-decoration:none}
-  .eq{font-family:var(--serif);font-size:1.45rem;text-align:center;margin:.7em 0} .eq .v{color:var(--indigo)} .eq .b{color:var(--rotor)}
   .lead{font-size:1.08rem}
   details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:14px 0;background:#fff}
   details summary{cursor:pointer;font-weight:600;font-size:.95rem;color:var(--indigo)}
   details p{font-size:.95rem;margin:.5em 0}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px;box-shadow:0 1px 3px rgba(20,23,31,.04)}
   .twin{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:620px){.twin{grid-template-columns:1fr}}
-  .cv-card .t{font-weight:700;font-size:.95rem;margin:0 0 6px} .cv-card .t.sp{color:var(--good)} .cv-card .t.ar{color:var(--rotor)}
   canvas.plot{width:100%;height:230px;display:block;border-radius:10px;border:1px solid var(--line)}
   canvas.dark{background:#0e1020} canvas.lite{background:#fcfcfe}
-  .cv-card .sub{font-size:.82rem;color:var(--muted);margin:6px 0 0}
   .r2{margin-top:12px;font-size:.95rem;color:var(--muted)} .r2 b{color:var(--ink)}
   .ctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 14px}
   .ctl label{font-size:.9rem;color:var(--muted);font-weight:600} input[type=range]{flex:1;min-width:150px;accent-color:var(--indigo)}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:20px}
   .c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
   .c .n{font-family:var(--mono);color:var(--indigo);font-size:.82rem} .c h3{margin:.2em 0 .3em;font-size:1.05rem} .c p{margin:0;font-size:.93rem;color:var(--muted)}
+  /* M-I plane */
+  .mi-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start;margin-top:16px}@media(max-width:680px){.mi-wrap{grid-template-columns:1fr}}
+  canvas#miPlane{background:#fcfcfe;border:1px solid var(--line);border-radius:10px;width:100%;height:260px;display:block}
+  .mi-legend{font-size:.9rem}
+  .mi-legend li{list-style:none;margin:.5em 0;display:flex;align-items:center;gap:8px}
+  .dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0}
   /* polar map */
   .mapwrap{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:center;margin-top:16px}@media(max-width:680px){.mapwrap{grid-template-columns:1fr}}
   .legend{font-size:.9rem} .legend li{margin:.35em 0;list-style:none}
   .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:middle}
+  /* limitation pills */
+  .lim-list{display:flex;flex-direction:column;gap:10px;margin:18px 0}
+  .lim{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:.97rem}
+  .lim .tag-l{font-family:var(--mono);font-size:.75rem;color:var(--rotor);font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px}
+  .lim.fixed{border-color:#c8f0de} .lim.fixed .tag-l{color:var(--good)}
   footer{border-top:1px solid var(--line);padding:40px 0 70px;color:var(--muted);font-size:.92rem}
   .note{font-size:.85rem;color:var(--muted);margin-top:10px}
+  /* eq */
+  .eq{font-family:var(--serif);font-size:1.45rem;text-align:center;margin:.7em 0} .eq .v{color:var(--indigo)} .eq .b{color:var(--rotor)}
 </style>
 </head>
 <body>
 
 <nav><div class="wrap">
   <b>Symbolic&nbsp;Pure&nbsp;Time</b>
-  <a href="#idea">The idea</a><a href="#matrix">The operator</a><a href="#reading">Reading&nbsp;M</a>
-  <a href="#time">Time</a><a href="#practice">In&nbsp;practice</a><a href="#why">Why</a><a href="#get">Get&nbsp;it</a>
+  <a href="#idea">The idea</a>
+  <a href="#mi">M-I decomposition</a>
+  <a href="#matrix">The operator</a>
+  <a href="#reading">Reading&nbsp;M</a>
+  <a href="#practice">In&nbsp;practice</a>
+  <a href="#why">Why</a>
+  <a href="#get">Get&nbsp;it</a>
 </div></nav>
 
 <header class="hero">
@@ -79,118 +94,124 @@
   <div class="wrap">
     <span class="badge">MIT · open notebooks</span>
     <h1>Symbolic Pure Time.</h1>
-    <p class="tag">An algebraic correction to least squares on time series. Hamilton called algebra "the science of pure time"; a century and a half later, the kinematic jet <span class="mono">(y, Δy, Δ²y)</span> lets ordinary least squares read the trajectory as a curve in phase space — forward-looking, geometric, <span class="mono">t</span>-free.</p>
+    <p class="tag">OLS on a time series carries three structural limitations. This removes all three — with one change to the design matrix and the same closed-form solve.</p>
     <div class="cta">
-      <a class="btn p" href="#practice">See it on four cases ↓</a>
-      <a class="btn s" href="https://github.com/juanivb/symbolic_pure_time">Code & notebooks (MIT)</a>
+      <a class="btn p" href="#mi">The M-I decomposition ↓</a>
+      <a class="btn s" href="https://github.com/juanivb/symbolic_pure_time">Code &amp; notebooks (MIT)</a>
     </div>
   </div>
 </header>
 
-<!-- FUNDAMENTALS -->
+<!-- THE IDEA -->
 <section id="idea">
   <div class="wrap">
-    <h2>One idea: regress on the kinematic jet</h2>
-    <p class="lead">Classical time-series models regress on <em>past values</em>
-    <span class="mono">(y<sub>t-1</sub>, y<sub>t-2</sub>, …)</span>. Symbolic Pure-Time
-    Least Squares (SPTLS) regresses on the <em>instantaneous state</em> — the level, its
-    velocity and its acceleration at the same time stamp, the <em>kinematic jet</em>:</p>
+    <h2>Three limitations, one fix</h2>
+    <p class="lead">Ordinary least squares on time series is the working practitioner's default. But it comes with three structural limitations that are usually addressed by separate, sequential procedures:</p>
+
+    <div class="lim-list">
+      <div class="lim">
+        <span class="tag-l">Limitation 1</span>
+        <b>Pre-testing requirement.</b> The regression cannot be set up before you know whether the series is stationary. A Dickey–Fuller battery must run first, and its result determines the specification.
+      </div>
+      <div class="lim">
+        <span class="tag-l">Limitation 2</span>
+        <b>Residuals as nuisance.</b> The distributional character of the one-step residuals — the actual shape of what arrives as new at each step — is treated as something to validate after the fit, not as a quantity to read from it.
+      </div>
+      <div class="lim">
+        <span class="tag-l">Limitation 3</span>
+        <b>Two objects, two procedures.</b> The predictable component (what the past determines about the present) and the innovations (what is genuinely new) are recovered separately — one from the fitted coefficients, one from the residual series.
+      </div>
+    </div>
+
+    <p>The fix is minimal: instead of regressing on the lagged scalar values
+    <span class="mono">(y<sub>t−1</sub>, y<sub>t−2</sub>, …)</span>, run the same closed-form OLS solve on the <em>kinematic state</em> — level, velocity, acceleration at the same time stamp, stacked as the jet:</p>
     <p class="eq">q(t) = ( <span class="v">y<sub>t</sub></span>, <span class="v">Δy<sub>t</sub></span>, <span class="v">Δ²y<sub>t</sub></span> )</p>
 
-    <p>The two designs span the <em>same column space</em>: with the same number of lags,
-    SPTLS on the jet and OLS on the lag stack produce identical residuals on the level row
-    and identical <span class="mono">R²</span>. The contribution of SPTLS is not a better
-    fit. It is what the regression <em>returns</em>: an operator
-    <span class="mono">M ∈ ℝ<sup>3×3</sup></span> on the jet, instead of a vector of
-    scalar coefficients on the lags. An operator is a richer object — and on the
-    Clifford algebra of the jet, its canonical decomposition reads back the structural
-    geometry of the dynamics.</p>
+    <p>The two designs span the same column space: SPTLS and OLS on the lag stack produce identical residuals on the level row and identical R². The contribution is not a better fit. What changes is what the regression <em>returns</em>: a <span class="mono">3×3</span> operator <span class="mono">M̂</span> rather than a vector of scalar coefficients. From that single solve, three simultaneous readings emerge — and all three limitations are removed at once.</p>
 
-    <h3>Why this domain — a thread from Hamilton and Clifford</h3>
-    <p>Two states of a moving system are compared not by subtracting numbers but by the
-    geometric relation that carries one into the other — a rotation-and-stretch. That
-    relation is exactly what quaternions were built to express: Hamilton's
-    <span class="mono">i, j, k</span> are the three planes in which a state can turn. The
-    kinematic jet plays the same role here — its three components span the planes
-    <em>level–velocity</em>, <em>level–acceleration</em>, <em>velocity–acceleration</em> —
-    and biquaternions (Clifford's extension) are the natural language for comparing two
-    such states. SPTLS lives on that substrate, <span class="mono">A ⊗ Cl(3,0)</span>:
-    differences (A) acting on a geometric state (Cl(3,0)). The point of the substrate is
-    that the canonical decomposition of <span class="mono">M</span> on this algebra
-    <em>is</em> the structural reading — spectrum, polar, grades — without further
-    post-processing.</p>
-    <p class="muted small">The intuition is enough here; the formal development lives in the foundational papers.</p>
+    <div class="lim-list">
+      <div class="lim fixed">
+        <span class="tag-l">Fixed 1</span>
+        <b>No pre-testing.</b> Integration order is encoded in the eigenvalue spectrum of M̂ and read algebraically in population — the fit is set up correctly for any integration order without a Dickey–Fuller step.
+      </div>
+      <div class="lim fixed">
+        <span class="tag-l">Fixed 2 — the key result</span>
+        <b>Residuals as first-class dynamics.</b> The one-step residuals are the Wold innovation sequence of the kinematic embedding, orthogonal to M̂ by the OLS projection theorem. Their distributional character (captured by the excess kurtosis κ of the velocity-row residuals) is a dynamic reading delivered by the same solve — not a by-product to validate.
+      </div>
+      <div class="lim fixed">
+        <span class="tag-l">Fixed 3</span>
+        <b>One solve, two channels.</b> The memory axis Δ and the innovation axis κ are orthogonal outputs of the same fit: the M-I decomposition.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- M-I DECOMPOSITION -->
+<section id="mi">
+  <div class="wrap">
+    <h2>The M-I decomposition</h2>
+    <p>The most consequential reading of M̂ is the <strong>memory–innovation (M-I) decomposition</strong>: two orthogonal axes extracted from the same closed-form solve.</p>
+
+    <p><b style="color:var(--indigo)">Memory axis Δ</b> — the Frobenius distance between M̂ and the i.i.d. baseline operator M̂<sup>iid</sup> (fitted on a random permutation of the series, which destroys temporal structure). Δ measures how far the dynamics depart from chance: zero for a white-noise series, large for an integrated or strongly autocorrelated one.</p>
+
+    <p><b style="color:var(--rotor)">Innovation axis κ</b> — the excess kurtosis of the one-step residuals on the velocity row. κ captures the distributional character of what arrives as genuinely new at each step: near zero for Gaussian innovations, large for heavy-tailed or spike-driven processes.</p>
+
+    <p>The two axes are orthogonal: Δ lives in the fitted operator, κ lives in the residuals. They are delivered simultaneously by one OLS solve on the kinematic jet. <strong>This is what standard regression does not provide</strong>: memory and innovation as two channels of the same fit, rather than as the output of two separate procedures.</p>
+
+    <div class="mi-wrap">
+      <div>
+        <canvas id="miPlane"></canvas>
+        <p class="note" style="margin-top:8px;text-align:center">M-I plane — each dot is one synthetic series (T = 500). Click a process type to regenerate.</p>
+        <div class="ctl" style="margin-top:12px;justify-content:center;gap:8px">
+          <button onclick="miDraw('gaussian_rw')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.88rem">Random walk</button>
+          <button onclick="miDraw('ar1_stationary')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.88rem">AR(1) stationary</button>
+          <button onclick="miDraw('heavy_tail')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.88rem">Heavy-tail shock</button>
+          <button onclick="miDraw('white_noise')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:.88rem">White noise</button>
+        </div>
+      </div>
+      <ul class="mi-legend" style="margin:0;padding:0">
+        <li><span class="dot" style="background:#9aa0ab"></span><b>White noise</b><br><span style="font-size:.85rem;color:var(--muted)">Low Δ, low κ — no memory, Gaussian innovations</span></li>
+        <li><span class="dot" style="background:var(--indigo)"></span><b>AR(1) stationary</b><br><span style="font-size:.85rem;color:var(--muted)">Moderate Δ, low κ — memory without shock</span></li>
+        <li><span class="dot" style="background:var(--good)"></span><b>Random walk I(1)</b><br><span style="font-size:.85rem;color:var(--muted)">High Δ, low κ — strong memory, Gaussian step</span></li>
+        <li><span class="dot" style="background:var(--rotor)"></span><b>Heavy-tail shock</b><br><span style="font-size:.85rem;color:var(--muted)">Δ near baseline, high κ — innovation-driven, not memory-driven</span></li>
+        <li style="margin-top:12px;font-size:.9rem;color:var(--muted)">A volatility filter conflates the last two; the M-I plane separates them. On S&amp;P 500 daily returns, the 2008 GFC (both Δ and κ rose) and the 2020 COVID shock (κ spiked, Δ near baseline) occupy distinct regions of this plane.</li>
+      </ul>
+    </div>
+    <p id="miReadout" class="r2" style="margin-top:14px"></p>
   </div>
 </section>
 
 <!-- THE OPERATOR -->
 <section id="matrix">
   <div class="wrap">
-    <h2>The operator: one closed-form solve, three readings</h2>
-    <p>SPTLS fits a single linear operator <span class="mono">M</span> that advances the jet
-    one step, <span class="mono">q(t+1) ≈ M·q(t)</span>, by ordinary least squares. That's
-    the entire computation: a closed-form normal-equations solve. What an econometrician
-    would otherwise run as a sequence of pre-tests (Dickey–Fuller, lag selection, Johansen
-    rank, cross-equation inclusion) is replaced by the fact that the kinematic jet already
-    contains the regressors those tests would have led the analyst to include. The textbook
-    fit is recovered <em>by construction</em>; the structural readings that the textbook
-    workflow extracts as post-fit diagnostics are recovered as canonical decompositions of
-    <span class="mono">M</span>.</p>
+    <h2>The operator: one solve, three readings</h2>
+    <p>SPTLS fits a single linear operator <span class="mono">M̂</span> that advances the jet one step, <span class="mono">q(t+1) ≈ M̂·q(t)</span>, by ordinary least squares. That's the entire computation: a closed-form normal-equations solve. From that one object, three simultaneous readings emerge.</p>
     <details>
-      <summary>How M is computed (and decomposed)</summary>
+      <summary>How M̂ is computed (and decomposed)</summary>
       <p><b>Fit.</b> Stack the jets into <span class="mono">Q₀, Q₁</span> and solve
-      <span class="mono">M = (Q₁ᵀQ₀)(Q₀ᵀQ₀)⁻¹</span> — the same normal-equations least
-      squares as OLS, on the jet instead of on lags.</p>
-      <p><b>Spectrum.</b> The eigenvalues <span class="mono">{λ₁, λ₂, λ₃}</span> of
-      <span class="mono">M</span> coincide with the roots of the characteristic
-      polynomial of the equivalent AR(<i>k</i>) fit. They read the order of integration
-      (modulus near 1) and the oscillatory frequency (argument of a complex pair) as
-      properties of the fit object, not as quantities the user has to extract.</p>
-      <p><b>Grade split.</b> Any 3×3 splits into a symmetric and an antisymmetric part,
-      <span class="mono">M = ½(M+Mᵀ) + ½(M−Mᵀ)</span>; the antisymmetric part is the
-      grade-2 (bivector) content.</p>
-      <p><b>Polar split.</b> From the SVD <span class="mono">M = UΣVᵀ</span>, the rotor is
-      <span class="mono">R = UVᵀ</span> and the stretch <span class="mono">P = VΣVᵀ</span>,
-      so <span class="mono">M = R·P</span>. The rotor angle is the rotation of the
-      dynamics in phase space; <span class="mono">det(P)</span> is the per-step volume
-      change.</p>
+      <span class="mono">M̂ = (Q₁ᵀQ₀)(Q₀ᵀQ₀)⁻¹</span> — the same normal-equations OLS, on the jet instead of on lags.</p>
+      <p><b>M-I decomposition.</b> Δ = ‖M̂ − M̂<sup>iid</sup>‖<sub>F</sub> (memory axis); κ = excess kurtosis of velocity-row residuals (innovation axis). The two are orthogonal by the OLS projection theorem.</p>
+      <p><b>Polar split.</b> From the SVD <span class="mono">M̂ = UΣVᵀ</span>, the rotor is
+      <span class="mono">R = UVᵀ</span> and the stretch <span class="mono">P = VΣVᵀ</span>.
+      The rotor angle is the rotation of the dynamics in phase space.</p>
+      <p><b>Grade decomposition.</b> The Clifford grade structure of M̂ reads isotropic gain (grade-0 / scalar), rotation in each kinematic plane (grade-2 / bivector), and per-step volume change (det M̂ / pseudoscalar).</p>
     </details>
-  </div>
-</section>
-
-<!-- NATIVE STATE -->
-<section>
-  <div class="wrap">
-    <h2>It forecasts the <em>state</em>, natively</h2>
-    <p>Because the unknown is the jet, one SPTLS step returns <strong>level, velocity and
-    acceleration together</strong> — not just the next value. Ordinary least squares gives
-    only the level; momentum and curvature come out only indirectly, by differencing the
-    level forecasts (which amplifies noise and need not be coherent). The native state is
-    what you actually want for control and risk — you know whether you are <em>accelerating
-    into or out of</em> a regime — and it is what makes iterated free-run possible: you
-    advance the whole state, not a single scalar (that is how the attractor below gets
-    regenerated).</p>
   </div>
 </section>
 
 <!-- READING M -->
 <section id="reading">
   <div class="wrap">
-    <h2>Reading M: nine numbers, a full geometry</h2>
-    <p>The fitted operator is a white box. Its nine entries — and the eighteen of its
-    polar form <span class="mono">M = R·P</span> — carry the complete local geometry of the
-    dynamics, by Clifford grade.</p>
+    <h2>Reading M̂: nine numbers, a full geometry</h2>
+    <p>The fitted operator is a white box. Its nine entries — and the eighteen of its polar form <span class="mono">M̂ = R·P</span> — carry the complete local geometry of the dynamics, by Clifford grade.</p>
     <div class="mapwrap">
       <svg viewBox="0 0 300 300" width="100%" aria-label="grade map of M">
         <defs><style>.lbl{font:12px var(--mono,monospace);fill:#5b6472}.cell{font:13px monospace;fill:#14171f}</style></defs>
-        <!-- 3x3 grid -->
         <g transform="translate(40,40)">
           <rect x="0" y="0" width="220" height="220" rx="10" fill="#fff" stroke="#e6e8ee"/>
           <line x1="73" y1="0" x2="73" y2="220" stroke="#eef0f4"/><line x1="146" y1="0" x2="146" y2="220" stroke="#eef0f4"/>
           <line x1="0" y1="73" x2="220" y2="73" stroke="#eef0f4"/><line x1="0" y1="146" x2="220" y2="146" stroke="#eef0f4"/>
-          <!-- diagonal: scalar/grade-0 -->
           <circle cx="36" cy="36" r="15" fill="#8a8f9a22"/><circle cx="110" cy="110" r="15" fill="#8a8f9a22"/><circle cx="183" cy="183" r="15" fill="#8a8f9a22"/>
-          <!-- bivector pairs -->
           <rect x="88" y="14" width="44" height="44" rx="7" fill="#e0552b22"/><text x="110" y="40" text-anchor="middle" class="cell" fill="#e0552b">e₁₂</text>
           <rect x="161" y="14" width="44" height="44" rx="7" fill="#4f46e522"/><text x="183" y="40" text-anchor="middle" class="cell" fill="#4f46e5">e₁₃</text>
           <rect x="161" y="88" width="44" height="44" rx="7" fill="#1f9d6b22"/><text x="183" y="114" text-anchor="middle" class="cell" fill="#1f9d6b">e₂₃</text>
@@ -199,40 +220,17 @@
           <text x="183" y="187" text-anchor="middle" class="cell" fill="#8a8f9a">s</text>
           <text x="36" y="114" text-anchor="middle" class="lbl">·</text><text x="36" y="187" text-anchor="middle" class="lbl">·</text><text x="110" y="187" text-anchor="middle" class="lbl">·</text>
         </g>
-        <text x="150" y="20" text-anchor="middle" class="lbl">M acts on q = (z, Δz, Δ²z)</text>
-        <text x="150" y="290" text-anchor="middle" class="lbl">det(M) = e₁₂₃  ·  oriented volume / step</text>
+        <text x="150" y="20" text-anchor="middle" class="lbl">M̂ acts on q = (y, Δy, Δ²y)</text>
+        <text x="150" y="290" text-anchor="middle" class="lbl">det(M̂) = e₁₂₃  ·  oriented volume / step</text>
       </svg>
       <ul class="legend">
-        <li><span class="sw" style="background:#8a8f9a"></span><b>Grade-0 (scalar):</b> the trace / isotropic gain — overall growth or decay.</li>
-        <li><span class="sw" style="background:var(--rotor)"></span><b>Bivector e₁₂:</b> rotation in the level–velocity plane — the oscillation. (In a damped rotation it dominates: ≈ 0.81.)</li>
-        <li><span class="sw" style="background:var(--indigo)"></span><b>Bivector e₁₃ / <span style="color:var(--good)">e₂₃</span>:</b> couplings to acceleration — often weak, and noise when the process is simple.</li>
-        <li><span class="sw" style="background:#14171f"></span><b>Pseudoscalar (grade-3) = det M:</b> the oriented volume change of the jet per step — contraction (dissipation) and orientation.</li>
+        <li><span class="sw" style="background:#8a8f9a"></span><b>Grade-0 (scalar):</b> isotropic gain — overall growth or decay.</li>
+        <li><span class="sw" style="background:var(--rotor)"></span><b>Bivector e₁₂:</b> rotation in the level–velocity plane — the oscillatory component.</li>
+        <li><span class="sw" style="background:var(--indigo)"></span><b>Bivectors e₁₃ / <span style="color:var(--good)">e₂₃</span>:</b> couplings to acceleration — often weak for simple processes.</li>
+        <li><span class="sw" style="background:#14171f"></span><b>Pseudoscalar (det M̂):</b> oriented volume change per step — contraction and irreversibility.</li>
       </ul>
     </div>
-    <p style="margin-top:14px"><b>Polar form M = R·P.</b> The <b style="color:var(--rotor)">rotor R</b> is pure
-    orientation — an axis (which kinematic plane turns) and an angle (how fast: the
-    frequency). The <b>stretch P</b> is the gain: its eigenvalues are the per-direction
-    growth/decay rates that OLS sees as its "abelian shadow." On the damped rotation above,
-    R turns ≈ 81° per step and det M ≈ −0.40 — the jet cell shrinks to 40% and flips
-    orientation each step.</p>
-    <p class="muted"><b>From point estimate to distribution.</b> That rotor/bivector is the
-    empirical fingerprint of the same grade-2 content that the programme's graded
-    characteristic function lifts from a single estimate to a full distributional spectrum —
-    the bridge from "this fit" to "this law."</p>
-  </div>
-</section>
-
-<!-- TIME -->
-<section id="time">
-  <div class="wrap">
-    <h2>What the operator says about time</h2>
-    <p>M is the operator that advances the jet of time one step — a local chronometer. Its
-    decomposition reads the texture of time itself: the <b style="color:var(--rotor)">rotor</b>
-    is time's cyclic, recurrent aspect; the <b>stretch</b> is its persistence and memory; the
-    <b>pseudoscalar</b> (det&nbsp;M&nbsp;&lt;&nbsp;1) is its irreversibility — the arrow,
-    written as a contraction of phase-space volume. Hamilton called algebra "the science of
-    pure time"; here those nine numbers are an instantaneous algebraic portrait of how time
-    acts on the state.</p>
+    <p style="margin-top:14px"><b>Polar form M̂ = R·P.</b> The <b style="color:var(--rotor)">rotor R</b> is pure orientation — which kinematic plane turns and how fast. The <b>stretch P</b> is the gain: its eigenvalues are the per-direction growth/decay rates.</p>
   </div>
 </section>
 
@@ -240,20 +238,10 @@
 <section id="practice">
   <div class="wrap">
     <h2>In practice — four textbook cases</h2>
-    <p>Four trajectories where the naïve OLS baseline a practitioner writes down first is
-    mis-specified or outright spurious, and where the textbook hand-construction recovers
-    the correct fit only after a sequence of pre-tests. In each case, SPTLS on the
-    kinematic jet matches the textbook fit by construction (same column space, same
-    residuals on the level row, same <span class="mono">R²</span> and Durbin–Watson) and
-    returns the structural reading as a canonical output of the operator. Each fit runs
-    live in your browser.</p>
+    <p>Four trajectories where the naïve OLS baseline is mis-specified, and where the textbook hand-construction recovers the correct fit only after a sequence of pre-tests. In each case, SPTLS on the kinematic jet matches the textbook fit by construction (same column space, same residuals, same R² and Durbin–Watson) and returns the structural reading as a canonical output of the operator. Each fit runs live in your browser.</p>
 
     <h3>1 · Univariate non-stationary AR(2) with one unit root</h3>
-    <p>DGP: <span class="mono">y<sub>t</sub> = 1.6 y<sub>t−1</sub> − 0.6 y<sub>t−2</sub> + ε<sub>t</sub></span>.
-    Characteristic roots <span class="mono">{1.0, 0.6}</span> — one unit root, one
-    stationary root. Naïve baseline: AR(1). The omitted second lag pushes the residuals
-    into autocorrelation; Durbin–Watson collapses. SPTLS reads the integration order
-    directly off the eigenvalues of <span class="mono">M̂</span>.</p>
+    <p>DGP: <span class="mono">y<sub>t</sub> = 1.6 y<sub>t−1</sub> − 0.6 y<sub>t−2</sub> + ε<sub>t</sub></span>. Roots {1.0, 0.6}. Naïve AR(1) collapses; SPTLS reads integration order from the eigenvalues of M̂.</p>
     <div class="panel">
       <canvas id="cvI1" class="plot lite"></canvas>
       <p class="r2" id="r2i1"></p>
@@ -261,14 +249,7 @@
     </div>
 
     <h3>2 · Trivariate linearly cointegrated VAR</h3>
-    <p>DGP: <span class="mono">x<sub>t</sub></span> is a random walk;
-    <span class="mono">y<sub>t</sub> = 0.5 y<sub>t−1</sub> + 0.5 x<sub>t−1</sub> + ε<sup>y</sup></span>,
-    <span class="mono">z<sub>t</sub> = 0.7 z<sub>t−1</sub> + 0.3 x<sub>t−1</sub> + ε<sup>z</sup></span>.
-    Naïve baseline: regress <span class="mono">y</span> on <span class="mono">z</span> in
-    levels — the classical spurious-regression trap (Granger–Newbold): <span class="mono">R²</span>
-    near 1, Durbin–Watson far below 2. SPTLS joint on the kinematic jet recovers the
-    textbook AR-by-equation fit; the cross-block norms of <span class="mono">M̂</span> read
-    the Granger direction.</p>
+    <p>The classical spurious-regression trap (Granger–Newbold). SPTLS joint recovers the textbook AR-by-equation fit; the cross-block of M̂ reads the Granger direction.</p>
     <div class="panel">
       <canvas id="cvCoint" class="plot lite"></canvas>
       <p class="r2" id="r2coint"></p>
@@ -276,12 +257,7 @@
     </div>
 
     <h3>3 · Univariate oscillatory AR(2) with complex roots</h3>
-    <p>DGP: <span class="mono">y<sub>t</sub> = 2ρ cos(θ) y<sub>t−1</sub> − ρ² y<sub>t−2</sub> + ε<sub>t</sub></span>,
-    with <span class="mono">ρ = 0.95, θ = π/5</span>. Characteristic roots
-    <span class="mono">0.95 · e<sup>±iπ/5</sup></span>. Naïve AR(1) collapses again; the
-    textbook AR(2) fits but reports the cycle as two scalar coefficients that require
-    root-finding to interpret. SPTLS reads the rotational frequency directly as the
-    argument of the complex eigenvalue pair of <span class="mono">M̂</span>.</p>
+    <p>DGP: roots <span class="mono">0.95 · e<sup>±iπ/5</sup></span>. SPTLS reads the rotational frequency as the argument of the complex eigenvalue pair — no periodogram, no root-finding on the AR polynomial.</p>
     <div class="panel">
       <canvas id="cvOsc" class="plot lite"></canvas>
       <p class="r2" id="r2osc"></p>
@@ -289,14 +265,7 @@
     </div>
 
     <h3>4 · Bivariate rotational VAR(1)</h3>
-    <p>DGP: <span class="mono">q<sub>t</sub> = ρ R(θ) q<sub>t−1</sub> + ε<sub>t</sub></span>
-    with <span class="mono">q = (x, y)</span>, <span class="mono">ρ = 0.95, θ = π/5</span>,
-    and <span class="mono">R(θ)</span> a planar rotation. Naïve baseline: regress each
-    series on its own lag only — DW collapses (the rotation lives in the cross-lag).
-    Textbook VAR(1) with cross-lag inclusion recovers the matrix; SPTLS joint extracts
-    the rotation as the polar antisymmetric grade of the level block of
-    <span class="mono">M̂<sub>joint</sub></span> — one number rather than four
-    coefficients.</p>
+    <p>DGP: <span class="mono">q<sub>t</sub> = 0.95·R(π/5)·q<sub>t−1</sub> + ε<sub>t</sub></span>. SPTLS joint extracts the rotation as the polar antisymmetric grade of the level block — one number, not four coefficients.</p>
     <div class="panel">
       <canvas id="cvRot" class="plot lite"></canvas>
       <p class="r2" id="r2rot"></p>
@@ -309,35 +278,18 @@
 <section id="why">
   <div class="wrap">
     <h2>Why SPTLS</h2>
-    <p class="lead">SPTLS releases OLS from the regimes its backward-looking design was
-    bounded to. On the kinematic jet the fit accommodates non-stationary trends, rotational
-    dynamics and multivariate co-movement without leaving ordinary least squares; and the
-    fitted operator carries — as part of its canonical output — the spectral, polar and
-    graded readings of the dynamics. <strong>Interpretability is not sacrificed for
-    coverage; it is enhanced</strong>: each guarantee of OLS is preserved, and the
-    structural decomposition of the operator is added on top.</p>
+    <p class="lead">SPTLS is not a different estimator. It is ordinary least squares run on a different design matrix. Every property practitioners value in OLS carries over — closed-form solution, Gauss–Markov optimality, cheap computation, transparent coefficients. What extends is the <em>reading</em> the regression returns by default.</p>
     <div class="cards">
-      <div class="c"><div class="n">unbounded</div><h3>Non-stationary trajectories, no pre-test</h3><p>The kinematic jet absorbs the lag structure a Dickey–Fuller pipeline would impose. Unit roots, near-unit roots and cointegrating relations are part of the regression by construction, not gated by an upstream test.</p></div>
-      <div class="c"><div class="n">unbounded</div><h3>Rotational dynamics, natively</h3><p>Oscillatory AR(2) processes and rotational VAR(1) couplings are fitted in the same closed-form OLS solve. The rotation does not require differencing or Fourier transforms — it is a property of the operator on the jet.</p></div>
-      <div class="c"><div class="n">enhanced</div><h3>Polar decomposition as native output</h3><p>The fitted operator factors as <span class="mono">M̂ = R̂ · P̂</span> by SVD — rotation × stretch, delivered as part of the fit. The rotor angle and the principal stretches are canonical, not derived.</p></div>
-      <div class="c"><div class="n">enhanced</div><h3>Grade decomposition by default</h3><p>Each Clifford grade carries a distinct kinematic role: scalar (isotropic gain), bivector (rotation in each plane), pseudoscalar (oriented volume change). Every coefficient of <span class="mono">M̂</span> sits in a graded slot that names what it does.</p></div>
+      <div class="c"><div class="n">fixed</div><h3>No pre-testing for integration order</h3><p>The kinematic jet absorbs the lag structure a Dickey–Fuller pipeline would impose. Unit roots and cointegrating relations are part of the regression by construction.</p></div>
+      <div class="c"><div class="n">key result</div><h3>Residuals as first-class dynamics</h3><p>The one-step residuals are the Wold innovation sequence, orthogonal to M̂ by the projection theorem. Their distributional character (κ) is a dynamic reading of the series, not a validation step run after the fit.</p></div>
+      <div class="c"><div class="n">fixed</div><h3>Memory and innovation from one solve</h3><p>Δ and κ are two orthogonal outputs of the same OLS solve. Standard regression recovers the predictable component and the innovations as the output of two separate procedures; SPTLS delivers both simultaneously.</p></div>
+      <div class="c"><div class="n">enhanced</div><h3>Polar decomposition as native output</h3><p>The fitted operator factors as M̂ = R̂·P̂ by SVD — rotation × stretch, delivered as part of the fit. The rotor angle and principal stretches are canonical, not derived.</p></div>
+      <div class="c"><div class="n">enhanced</div><h3>Grade decomposition by default</h3><p>Each Clifford grade carries a distinct kinematic role: scalar (isotropic gain), bivector (rotation in each plane), pseudoscalar (oriented volume change per step).</p></div>
+      <div class="c"><div class="n">multivariate</div><h3>Block reading: Granger and cointegration</h3><p>In the multivariate case, the block structure of M̂<sub>joint</sub> reports Granger direction and cointegration rank from one 3K×3K solve — without separate test batteries.</p></div>
     </div>
     <h3>What is kept, what is added</h3>
-    <p><strong>Kept:</strong> the closed-form solve, the transparent coefficients,
-    Gauss–Markov optimality under the usual regularity, the cheap computational footprint
-    — every property practitioners value about OLS. <strong>Added:</strong> the spectral
-    reading (order of integration, oscillatory frequency), the polar decomposition
-    (rotation, stretch), the grade decomposition (scalar / bivector / pseudoscalar) and,
-    in the multivariate case, the block structure of <span class="mono">M̂<sub>joint</sub></span>
-    that reports Granger direction and cointegration rank. Pre-fit batteries
-    (Dickey–Fuller, Johansen, AIC/BIC lag selection) and post-fit batteries (Ljung–Box,
-    periodogram, Granger test) are no longer downstream steps — they are readings of the
-    same operator.</p>
-    <h3>Building blocks</h3>
-    <p>The substrate is composable. <span class="mono">A ⊗ Cl(3,0)</span> can take a further
-    factor — e.g. <span class="mono">⊗ Cl(0,1)</span> — that adds an extra orientation axis to
-    the state; the least-squares solution doesn't change, only the embedding it runs on. The
-    same machine, retuned to the regime you need.</p>
+    <p><strong>Kept:</strong> the closed-form solve, Gauss–Markov optimality, cheap computational footprint, transparent coefficients and t-statistics. <strong>Added:</strong> M-I decomposition (memory and innovation as orthogonal channels), spectral reading (integration order, oscillatory frequency), polar decomposition (rotation, stretch), grade decomposition (scalar / bivector / pseudoscalar), and the block structure for multivariate Granger and cointegration. Pre-fit batteries (Dickey–Fuller, Johansen, AIC/BIC lag selection) and post-fit batteries (Ljung–Box, periodogram, Granger test) are no longer downstream steps — they are readings of the same operator.</p>
+    <p class="muted note">The result is not a competing methodology so much as a more complete reading of what OLS already does.</p>
   </div>
 </section>
 
@@ -345,56 +297,192 @@
 <section id="get">
   <div class="wrap">
     <h2>Open, and ready to run</h2>
-    <p>The reference library <code>gsd</code> is pure NumPy and <strong>MIT-licensed</strong>,
-    with ready-to-run exploratory notebooks — univariate (OLS vs SPTLS, step by step) and
-    multivariate (VAR/VECM vs SPTLS across regimes).</p>
+    <p>The reference library <code>gsd</code> is pure NumPy and <strong>MIT-licensed</strong>. The companion notebooks cover the M-I decomposition step by step, the four textbook cases, and the S&amp;P 500 application.</p>
     <div class="cta">
       <a class="btn p" href="https://github.com/juanivb/symbolic_pure_time">Get it on GitHub</a>
-      <a class="btn s" href="https://github.com/juanivb/symbolic_pure_time/tree/main/tutorial">Browse the notebooks</a>
+      <a class="btn s" href="https://github.com/juanivb/symbolic_pure_time/tree/main/papers/F-000/replication">Replication notebooks</a>
     </div>
+    <p class="note" style="margin-top:18px">Preprint archived on Zenodo · version DOI: <a href="https://doi.org/10.5281/zenodo.20832679"><code>10.5281/zenodo.20832679</code></a> · concept DOI: <a href="https://doi.org/10.5281/zenodo.20298431"><code>10.5281/zenodo.20298431</code></a></p>
   </div>
 </section>
 
 <footer><div class="wrap">
   <p>Symbolic Pure Time · a Geometric Signal Dynamics project · <a href="https://www.linkedin.com/in/jivb/">get in touch</a></p>
-  <p class="small">Every figure here — the attractor and all three fits — runs client-side in your browser.</p>
+  <p class="small">Every figure here runs client-side in your browser.</p>
 </div></footer>
 
 <script>
 "use strict";
+
+// ─── core math utilities ────────────────────────────────────────────────────
 function solve(A,b){const n=A.length;A=A.map((r,i)=>r.concat(b[i]));for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];for(let r=0;r<n;r++){if(r===c)continue;const f=A[r][c]/A[c][c];for(let k=c;k<=n;k++)A[r][k]-=f*A[c][k];}}return A.map((r,i)=>r[n]/r[i]);}
 function fit(X,y){const n=X[0].length,XtX=Array.from({length:n},()=>Array(n).fill(0)),Xty=Array(n).fill(0);for(let i=0;i<X.length;i++)for(let a=0;a<n;a++){Xty[a]+=X[i][a]*y[i];for(let b=0;b<n;b++)XtX[a][b]+=X[i][a]*X[i][b];}for(let a=0;a<n;a++)XtX[a][a]+=1e-9;const be=solve(XtX,Xty);const pred=X.map(r=>r.reduce((s,v,a)=>s+v*be[a],0));const m=y.reduce((s,v)=>s+v,0)/y.length;let ss=0,t=0;for(let i=0;i<y.length;i++){ss+=(y[i]-pred[i])**2;t+=(y[i]-m)**2;}return {r2:1-ss/t,be,pred};}
 function dpr(c){c.width=c.clientWidth*devicePixelRatio;c.height=c.clientHeight*devicePixelRatio;return c.getContext('2d');}
 function rng(s){return ()=>{s=(s*48271)%2147483647;return s/2147483647-0.5;};}
+function gauss(rngf){const u=Math.max(1e-9,rngf()+0.5),v=rngf()+0.5;return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function dw(r){let n=0,d=0;for(let i=1;i<r.length;i++)n+=(r[i]-r[i-1])**2;for(let i=0;i<r.length;i++)d+=r[i]**2;return n/d;}
+function ar2roots(phi1,phi2){const disc=phi1*phi1+4*phi2;if(disc>=0){const s=Math.sqrt(disc);return [{re:(phi1+s)/2,im:0},{re:(phi1-s)/2,im:0}];}else{const s=Math.sqrt(-disc);return [{re:phi1/2,im:s/2},{re:phi1/2,im:-s/2}];}}
+function modulus(c){return Math.sqrt(c.re*c.re+c.im*c.im);}
+function argDeg(c){return Math.atan2(Math.abs(c.im),c.re)*180/Math.PI;}
+function polar2x2Angle(a,b,c,d){const ata00=a*a+c*c,ata01=a*b+c*d,ata11=b*b+d*d;const tr=ata00+ata11,det=ata00*ata11-ata01*ata01;const disc=Math.max(0,tr*tr/4-det);const s=Math.sqrt(disc);const lam1=tr/2+s,lam2=tr/2-s;let v00,v10,v01,v11;if(Math.abs(ata01)>1e-12){v00=lam1-ata11;v10=ata01;const n=Math.sqrt(v00*v00+v10*v10);v00/=n;v10/=n;v01=-v10;v11=v00;}else{v00=1;v10=0;v01=0;v11=1;}const sig1=Math.sqrt(Math.max(lam1,1e-30)),sig2=Math.sqrt(Math.max(lam2,1e-30));const u00=(a*v00+b*v10)/sig1,u10=(c*v00+d*v10)/sig1;let u01=(a*v01+b*v11)/sig2,u11=(c*v01+d*v11)/sig2;const r00=u00*v00+u01*v01,r10=u10*v00+u11*v01;return Math.atan2(r10,r00)*180/Math.PI;}
 
-// hero: the trajectory as a curve in phase space — the kinematic jet (y, Δy, Δ²y) in 3D
-// A two-frequency damped oscillator gives a Lissajous-like braid in the jet, animated by rotation
-// of the 3-D viewing axis. Replaces the Lorenz attractor of earlier versions; this animation is
-// literally what the hero subtitle describes — the geometric invariants the series builds as a
-// curve in phase space.
+// ─── SPTLS kernel (3x3) ─────────────────────────────────────────────────────
+// kinematic jet for a scalar series
+function jet(y){const n=y.length-2,J=[];for(let t=0;t<n;t++)J.push([y[t+2],y[t+2]-y[t+1],(y[t+2]-y[t+1])-(y[t+1]-y[t])]);return J;}
+// fit 3x3 M via OLS: M = Q1^T Q0 (Q0^T Q0)^{-1}
+// returns {M:[[3x3]], resid:[[Tx3]]}
+function sptls3(y){
+  const J=jet(y);const T=J.length-1;
+  const q0=J.slice(0,T),q1=J.slice(1);
+  // C0 = Q0^T Q0, C1 = Q1^T Q0
+  const C0=[[0,0,0],[0,0,0],[0,0,0]],C1=[[0,0,0],[0,0,0],[0,0,0]];
+  for(let t=0;t<T;t++)for(let i=0;i<3;i++){for(let j=0;j<3;j++){C0[i][j]+=q0[t][i]*q0[t][j];C1[i][j]+=q1[t][i]*q0[t][j];}}
+  // regularise C0
+  for(let i=0;i<3;i++)C0[i][i]+=1e-8;
+  // M = C1 * inv(C0) via column-by-column solve
+  const M=[[0,0,0],[0,0,0],[0,0,0]];
+  for(let col=0;col<3;col++){
+    const rhs=[C1[0][col],C1[1][col],C1[2][col]];
+    // solve C0^T x = rhs (C0 is symmetric)
+    const A=C0.map(r=>[...r]);const x=solve(A,rhs);
+    for(let i=0;i<3;i++)M[i][col]=x[i];
+  }
+  // residuals: r_t = q1[t] - M q0[t]
+  const resid=q1.map(qt1=>{const Mq=[0,0,0];// M @ q0[t] => need q0[t]
+    return qt1;// placeholder: compute below
+  });
+  // proper residuals
+  const R=q1.map((qt1,t)=>{
+    const Mq=[M[0][0]*q0[t][0]+M[0][1]*q0[t][1]+M[0][2]*q0[t][2],
+               M[1][0]*q0[t][0]+M[1][1]*q0[t][1]+M[1][2]*q0[t][2],
+               M[2][0]*q0[t][0]+M[2][1]*q0[t][1]+M[2][2]*q0[t][2]];
+    return [qt1[0]-Mq[0],qt1[1]-Mq[1],qt1[2]-Mq[2]];
+  });
+  return {M,resid:R,q0,q1};
+}
+// Frobenius norm of matrix difference
+function frobenius(A,B){let s=0;for(let i=0;i<3;i++)for(let j=0;j<3;j++)s+=(A[i][j]-(B?B[i][j]:0))**2;return Math.sqrt(s);}
+// shuffle array in place (Fisher-Yates)
+function shuffle(arr,rngf){for(let i=arr.length-1;i>0;i--){const j=Math.floor((rngf()+0.5)*arr.length)%arr.length;[arr[i],arr[j]]=[arr[j],arr[i]];}}
+// excess kurtosis of an array
+function exkurt(arr){const n=arr.length;let m=0;for(const v of arr)m+=v;m/=n;let v2=0,v4=0;for(const x of arr){const d=x-m;v2+=d*d;v4+=d*d*d*d;}v2/=n;v4/=n;return v4/(v2*v2)-3;}
+// M-I decomposition for a series y: returns {delta, kappa}
+function mi(y,rngf,nShuffles){
+  nShuffles=nShuffles||8;
+  const main=sptls3(y);
+  // iid baseline: average over shuffles
+  const Miid=[[0,0,0],[0,0,0],[0,0,0]];
+  for(let s=0;s<nShuffles;s++){
+    const ys=[...y];shuffle(ys,rngf);
+    const res=sptls3(ys);
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++)Miid[i][j]+=res.M[i][j]/nShuffles;
+  }
+  const delta=frobenius(main.M,Miid);
+  // kappa: excess kurtosis of velocity-row (row 1) residuals
+  const velRes=main.resid.map(r=>r[1]);
+  const kappa=exkurt(velRes);
+  return {delta,kappa};
+}
+
+// ─── M-I plane demo ──────────────────────────────────────────────────────────
+const MI_COLORS={gaussian_rw:"#1f9d6b",ar1_stationary:"#4f46e5",heavy_tail:"#e0552b",white_noise:"#9aa0ab"};
+const MI_LABELS={gaussian_rw:"Random walk I(1)",ar1_stationary:"AR(1) ρ=0.8",heavy_tail:"Heavy-tail shock",white_noise:"White noise"};
+let miPoints=[];let miSeedOffset=0;
+
+function genSeries(type,T,rngf){
+  const y=new Array(T).fill(0);
+  if(type==='white_noise'){for(let t=0;t<T;t++)y[t]=gauss(rngf);}
+  else if(type==='gaussian_rw'){for(let t=1;t<T;t++)y[t]=y[t-1]+gauss(rngf);}
+  else if(type==='ar1_stationary'){for(let t=1;t<T;t++)y[t]=0.8*y[t-1]+gauss(rngf);}
+  else if(type==='heavy_tail'){
+    // mostly AR(1) but occasional large spikes (Student-like via ratio)
+    for(let t=1;t<T;t++){
+      const g1=gauss(rngf),g2=Math.max(0.05,Math.abs(gauss(rngf)));
+      const innov=g1/g2; // Cauchy-ish
+      y[t]=0.4*y[t-1]+0.3*innov;
+    }
+  }
+  return y;
+}
+
+function miDraw(type){
+  const T=500;
+  miPoints=miPoints.filter(p=>p.type!==type);// clear same type
+  for(let rep=0;rep<6;rep++){
+    const seed=17+rep*31+miSeedOffset;
+    const rngf=rng(seed);
+    const y=genSeries(type,T,rngf);
+    const rngf2=rng(seed+1000);
+    const {delta,kappa}=mi(y,rngf2,6);
+    miPoints.push({type,delta,kappa,label:MI_LABELS[type]});
+  }
+  miSeedOffset+=7;
+  miRender();
+}
+
+function miRender(){
+  const cv=document.getElementById('miPlane');
+  const c=dpr(cv),W=cv.width,H=cv.height;
+  const pad=40*devicePixelRatio;
+  c.clearRect(0,0,W,H);
+  // axes labels
+  c.font=11*devicePixelRatio+"px sans-serif";c.fillStyle="#9aa0ab";
+  c.fillText("← innovation κ (excess kurtosis of residuals) →",pad,H-8*devicePixelRatio);
+  c.save();c.translate(14*devicePixelRatio,H/2);c.rotate(-Math.PI/2);
+  c.textAlign="center";c.fillText("← memory Δ (Frobenius from iid baseline) →",0,0);c.restore();
+  // axis lines
+  c.strokeStyle="#e6e8ee";c.lineWidth=1*devicePixelRatio;
+  c.beginPath();c.moveTo(pad,pad);c.lineTo(pad,H-pad);c.lineTo(W-pad,H-pad);c.stroke();
+  // grid
+  c.strokeStyle="#f1f2f6";c.lineWidth=0.5*devicePixelRatio;
+  for(let i=1;i<4;i++){
+    const x=pad+(W-2*pad)*i/4;c.beginPath();c.moveTo(x,pad);c.lineTo(x,H-pad);c.stroke();
+    const y=pad+(H-2*pad)*i/4;c.beginPath();c.moveTo(pad,y);c.lineTo(W-pad,y);c.stroke();
+  }
+  if(!miPoints.length){
+    c.fillStyle="#c8ccd6";c.textAlign="center";c.font=13*devicePixelRatio+"px sans-serif";
+    c.fillText("Click a process type above to add points",W/2,H/2);
+    return;
+  }
+  // scale
+  const allD=miPoints.map(p=>p.delta),allK=miPoints.map(p=>p.kappa);
+  const maxD=Math.max(1,Math.max(...allD)*1.2);
+  const maxK=Math.max(1,Math.max(...allK.map(Math.abs))*1.2);
+  const minK=Math.min(-0.5,Math.min(...allK)*1.2);
+  const kRange=maxK-minK;
+  function px(k){return pad+(k-minK)/kRange*(W-2*pad);}
+  function py(d){return H-pad-d/maxD*(H-2*pad);}
+  // points
+  for(const pt of miPoints){
+    const x=px(pt.kappa),y=py(pt.delta);
+    c.beginPath();c.arc(x,y,7*devicePixelRatio,0,2*Math.PI);
+    c.fillStyle=MI_COLORS[pt.type]+"cc";c.fill();
+    c.strokeStyle=MI_COLORS[pt.type];c.lineWidth=1.5*devicePixelRatio;c.stroke();
+  }
+  // update readout
+  const last=miPoints[miPoints.length-1];
+  document.getElementById('miReadout').innerHTML=
+    `<b>${last.label}:</b> Δ = <b>${last.delta.toFixed(3)}</b> (memory), κ = <b>${last.kappa.toFixed(2)}</b> (excess kurtosis of innovations)`;
+}
+
+// initialise with all four
+(function(){['white_noise','ar1_stationary','gaussian_rw','heavy_tail'].forEach(miDraw);})();
+
+// ─── hero animation ──────────────────────────────────────────────────────────
 (function(){
   const cv=document.getElementById('lorenz'),ctx=cv.getContext('2d');
-  // Generate a 1-D trajectory: two damped oscillatory modes mixed with a slow drift.
-  // The kinematic jet (y, Δy, Δ²y) of this trajectory traces a Lissajous-like curve in 3-D.
   const N=4500, dt=0.025;
   const y=new Float64Array(N);
-  // Two complex-conjugate modes (Case 3-style oscillatory AR(2) decomposition) with different
-  // frequencies → braided phase-space curve
-  const w1=1.0, w2=1.618*1.0, d1=0.012, d2=0.008;   // golden-ratio frequencies, mild damping
+  const w1=1.0, w2=1.618*1.0, d1=0.012, d2=0.008;
   let y1=1.0,v1=0.0,y2=0.6,v2=0.0;
   for(let t=0;t<N;t++){
-    // mode 1
     const a1=-w1*w1*y1-2*d1*v1; v1+=a1*dt; y1+=v1*dt;
-    // mode 2
     const a2=-w2*w2*y2-2*d2*v2; v2+=a2*dt; y2+=v2*dt;
     y[t]=y1+0.55*y2;
   }
-  // Kinematic jet
   const P=[];
   for(let t=2;t<N;t++) P.push([y[t], y[t]-y[t-1], y[t]-2*y[t-1]+y[t-2]]);
-  // Centre
   let cx=0,cy=0,cz=0;P.forEach(p=>{cx+=p[0];cy+=p[1];cz+=p[2];});cx/=P.length;cy/=P.length;cz/=P.length;
-  // Range — scale Δy and Δ²y up so the curve uses all three dimensions
   let sx=0,sy=0,sz=0;P.forEach(p=>{sx=Math.max(sx,Math.abs(p[0]-cx));sy=Math.max(sy,Math.abs(p[1]-cy));sz=Math.max(sz,Math.abs(p[2]-cz));});
   const scY=1/sx, scDY=1/sy, scD2Y=1/sz;
   function rs(){cv.width=cv.clientWidth*devicePixelRatio;cv.height=cv.clientHeight*devicePixelRatio;}rs();addEventListener('resize',rs);
@@ -402,17 +490,13 @@ function rng(s){return ()=>{s=(s*48271)%2147483647;return s/2147483647-0.5;};}
   (function frame(){
     const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
     ang+=0.0017;
-    // 3-D rotation: yaw around vertical axis, slight pitch
     const ca=Math.cos(ang),sa=Math.sin(ang);
     const cp=Math.cos(0.28),sp=Math.sin(0.28);
     const pr=[];let mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
     for(const p of P){
-      // centred, normalised jet coordinates
       const x=(p[0]-cx)*scY, y=(p[1]-cy)*scDY, z=(p[2]-cz)*scD2Y;
-      // yaw then pitch
       const x1=ca*x-sa*z, z1=sa*x+ca*z;
       const y2=cp*y-sp*z1, z2=sp*y+cp*z1;
-      // project (x1, y2) to screen with z2 as depth tint
       pr.push([x1,y2,z2]);
       if(x1<mnx)mnx=x1;if(x1>mxx)mxx=x1;if(y2<mny)mny=y2;if(y2>mxy)mxy=y2;
     }
@@ -421,7 +505,6 @@ function rng(s){return ()=>{s=(s*48271)%2147483647;return s/2147483647-0.5;};}
     ctx.lineWidth=1.0*devicePixelRatio;
     for(let i=1;i<pr.length;i++){
       const t=i/pr.length;
-      // depth shading: depth-positive points slightly darker / more saturated
       const depth=(pr[i][2]+1)/2;
       const hue=232+t*60;
       const alpha=0.14+0.42*t;
@@ -435,50 +518,7 @@ function rng(s){return ()=>{s=(s*48271)%2147483647;return s/2147483647-0.5;};}
   })();
 })();
 
-// Helpers for the four cases
-function dw(r){let n=0,d=0;for(let i=1;i<r.length;i++)n+=(r[i]-r[i-1])**2;for(let i=0;i<r.length;i++)d+=r[i]**2;return n/d;}
-function gauss(rngf){const u=rngf()+0.5,v=rngf()+0.5;return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
-// AR(2) characteristic-polynomial roots of y_t = phi1 y_{t-1} + phi2 y_{t-2}
-// roots of lambda^2 - phi1*lambda - phi2 = 0
-function ar2roots(phi1, phi2){
-  const disc = phi1*phi1 + 4*phi2;
-  if(disc >= 0){
-    const s = Math.sqrt(disc);
-    return [{re:(phi1+s)/2, im:0}, {re:(phi1-s)/2, im:0}];
-  } else {
-    const s = Math.sqrt(-disc);
-    return [{re: phi1/2, im: s/2}, {re: phi1/2, im: -s/2}];
-  }
-}
-function modulus(c){return Math.sqrt(c.re*c.re + c.im*c.im);}
-function argDeg(c){return Math.atan2(Math.abs(c.im), c.re) * 180 / Math.PI;}
-// Polar rotor angle of a 2x2 matrix A. Polar via SVD: A = U S V^T, R = U V^T.
-// For 2x2 we use the closed form via the angle of normalised columns.
-function polar2x2Angle(a, b, c, d){
-  // Compute A^T A eigen / SVD via 2x2 closed form
-  const ata00 = a*a + c*c, ata01 = a*b + c*d, ata11 = b*b + d*d;
-  const tr = ata00 + ata11, det = ata00*ata11 - ata01*ata01;
-  const disc = Math.max(0, tr*tr/4 - det);
-  const s = Math.sqrt(disc);
-  const lam1 = tr/2 + s, lam2 = tr/2 - s;
-  // V from eigenvectors of A^T A
-  let v00, v10, v01, v11;
-  if(Math.abs(ata01) > 1e-12){
-    v00 = lam1 - ata11; v10 = ata01;
-    const n = Math.sqrt(v00*v00 + v10*v10); v00/=n; v10/=n;
-    v01 = -v10; v11 = v00;
-  } else { v00 = 1; v10 = 0; v01 = 0; v11 = 1; }
-  // U columns = A v / sigma_i
-  const sig1 = Math.sqrt(Math.max(lam1, 1e-30)), sig2 = Math.sqrt(Math.max(lam2, 1e-30));
-  const u00 = (a*v00 + b*v10)/sig1, u10 = (c*v00 + d*v10)/sig1;
-  let u01 = (a*v01 + b*v11)/sig2, u11 = (c*v01 + d*v11)/sig2;
-  // R = U V^T
-  const r00 = u00*v00 + u01*v01, r10 = u10*v00 + u11*v01;
-  const r01 = u00*v10 + u01*v11, r11 = u10*v10 + u11*v11;
-  return Math.atan2(r10, r00) * 180 / Math.PI;
-}
-
-// Generic line-plot of a single trajectory (subsample to ~Nshow points)
+// ─── plot helpers ────────────────────────────────────────────────────────────
 function tracePlot(canvasId, y, opts){
   opts = opts || {};
   const c = dpr(document.getElementById(canvasId)), cv = c.canvas, W = cv.width, H = cv.height;
@@ -489,22 +529,16 @@ function tracePlot(canvasId, y, opts){
   const X = i => p + i/(Nshow-1) * (W - 2*p);
   const Y = v => H - p - (v - ymin)/(ymax - ymin + 1e-9) * (H - 2*p);
   c.clearRect(0,0,W,H);
-  // y=0 reference
   c.strokeStyle = "#dfe2eb"; c.lineWidth = 1*devicePixelRatio;
   c.beginPath(); c.moveTo(p, Y(0)); c.lineTo(W-p, Y(0)); c.stroke();
   c.strokeStyle = opts.color || "#4f46e5"; c.lineWidth = 1.4*devicePixelRatio;
   c.beginPath();
-  for(let i=0;i<Nshow;i++){
-    const v = y[Math.min(y.length-1, i*stride)];
-    const xx = X(i), yy = Y(v);
-    if(i) c.lineTo(xx, yy); else c.moveTo(xx, yy);
-  }
+  for(let i=0;i<Nshow;i++){const v = y[Math.min(y.length-1, i*stride)];const xx = X(i), yy = Y(v);if(i) c.lineTo(xx, yy); else c.moveTo(xx, yy);}
   c.stroke();
   c.font = 11*devicePixelRatio + "px sans-serif"; c.fillStyle = "#9aa0ab";
   c.fillText(opts.label || "", p, p+11*devicePixelRatio);
 }
 
-// Generic 2D phase-plot for a (x,y) trajectory
 function phasePlot(canvasId, x, y, opts){
   opts = opts || {};
   const c = dpr(document.getElementById(canvasId)), cv = c.canvas, W = cv.width, H = cv.height;
@@ -514,93 +548,58 @@ function phasePlot(canvasId, x, y, opts){
   const sc = Math.min((W-2*p)/(xmax-xmin+1e-9), (H-2*p)/(ymax-ymin+1e-9));
   const ox = (W - (xmax+xmin)*sc)/2, oy = (H + (ymax+ymin)*sc)/2;
   c.clearRect(0,0,W,H);
-  // axes
   c.strokeStyle = "#dfe2eb"; c.lineWidth = 1*devicePixelRatio;
   c.beginPath(); c.moveTo(ox + xmin*sc, oy); c.lineTo(ox + xmax*sc, oy); c.stroke();
   c.beginPath(); c.moveTo(ox, oy - ymin*sc); c.lineTo(ox, oy - ymax*sc); c.stroke();
-  // trajectory with fading colour
   c.lineWidth = 1.0*devicePixelRatio;
-  for(let i=1;i<x.length;i++){
-    const t = i/x.length;
-    c.strokeStyle = `hsla(225, 70%, ${30+40*t}%, ${0.25+0.55*t})`;
-    c.beginPath();
-    c.moveTo(ox + x[i-1]*sc, oy - y[i-1]*sc);
-    c.lineTo(ox + x[i]*sc, oy - y[i]*sc);
-    c.stroke();
-  }
-  c.font = 11*devicePixelRatio + "px sans-serif"; c.fillStyle = "#9aa0ab";
-  c.fillText(opts.xlabel || "x", W - p - 14*devicePixelRatio, oy + 14*devicePixelRatio);
-  c.fillText(opts.ylabel || "y", ox + 6*devicePixelRatio, p + 11*devicePixelRatio);
+  for(let i=1;i<x.length;i++){const t = i/x.length;c.strokeStyle = `hsla(225, 70%, ${30+40*t}%, ${0.25+0.55*t})`;c.beginPath();c.moveTo(ox + x[i-1]*sc, oy - y[i-1]*sc);c.lineTo(ox + x[i]*sc, oy - y[i]*sc);c.stroke();}
 }
 
-// ============ CASE 1 — AR(2) I(1) ============
+// ─── Case 1 — AR(2) I(1) ────────────────────────────────────────────────────
 (function(){
   const r = rng(101);
   const T = 800, phi1 = 1.6, phi2 = -0.6;
   const y = new Array(T).fill(0);
   for(let t=2;t<T;t++) y[t] = phi1*y[t-1] + phi2*y[t-2] + gauss(r);
-  // OLS AR(1) misspec
   let X1=[], y1=[]; for(let t=1;t<T;t++){X1.push([1, y[t-1]]); y1.push(y[t]);}
   const f1 = fit(X1, y1);
   const r1 = y1.map((v,i)=>v - f1.pred[i]);
-  // OLS AR(2)
   let X2=[], y2=[]; for(let t=2;t<T;t++){X2.push([1, y[t-1], y[t-2]]); y2.push(y[t]);}
   const f2 = fit(X2, y2);
   const r2 = y2.map((v,i)=>v - f2.pred[i]);
-  // SPTLS = AR(2) by basis change, so same R^2, DW on level
   const phi1h = f2.be[1], phi2h = f2.be[2];
   const roots = ar2roots(phi1h, phi2h);
   const mods = roots.map(modulus).sort((a,b)=>b-a);
-  tracePlot('cvI1', y, {color:"#4f46e5", label:"y_t (T=800, I(1) AR(2))"});
+  tracePlot('cvI1', y, {color:"#4f46e5", label:"y_t  (T=800, I(1) AR(2))"});
   document.getElementById('r2i1').innerHTML =
     `OLS AR(1) <b>R²=${f1.r2.toFixed(3)}</b> <span class="muted">DW=${dw(r1).toFixed(2)}</span> &nbsp;·&nbsp; ` +
-    `OLS AR(2) <b>R²=${f2.r2.toFixed(3)}</b> <span class="muted">DW=${dw(r2).toFixed(2)}</span> &nbsp;·&nbsp; ` +
-    `SPTLS = AR(2) by basis change`;
+    `OLS AR(2) <b>R²=${f2.r2.toFixed(3)}</b> <span class="muted">DW=${dw(r2).toFixed(2)}</span> &nbsp;·&nbsp; SPTLS = AR(2) by basis change`;
   document.getElementById('eigI1').innerHTML =
-    `<b>Spectrum of M̂:</b> eigenvalues with modulus <b>{${mods[0].toFixed(3)}, ${mods[1].toFixed(3)}}</b> — ` +
-    `the largest is ≈ 1 (the unit root), the second is the stationary first-difference slope. ` +
-    `Dickey–Fuller is not run; the order of integration is read off the spectrum.`;
+    `<b>Spectrum of M̂:</b> moduli <b>{${mods[0].toFixed(3)}, ${mods[1].toFixed(3)}}</b> — the largest ≈ 1 (unit root), the second is the stationary root. Integration order is read off the spectrum; no Dickey–Fuller step.`;
 })();
 
-// ============ CASE 2 — linearly cointegrated VAR ============
+// ─── Case 2 — cointegrated VAR ───────────────────────────────────────────────
 (function(){
   const r = rng(7);
   const T = 700;
   const x = new Array(T).fill(0), y = new Array(T).fill(0), z = new Array(T).fill(0);
-  for(let t=1;t<T;t++){
-    x[t] = x[t-1] + 0.5*gauss(r);
-    y[t] = 0.5*y[t-1] + 0.5*x[t-1] + 0.3*gauss(r);
-    z[t] = 0.7*z[t-1] + 0.3*x[t-1] + 0.5*gauss(r);
-  }
-  // Naive spurious y ~ z (level)
+  for(let t=1;t<T;t++){x[t]=x[t-1]+0.5*gauss(r);y[t]=0.5*y[t-1]+0.5*x[t-1]+0.3*gauss(r);z[t]=0.7*z[t-1]+0.3*x[t-1]+0.5*gauss(r);}
   let Xs=[], ys=[]; for(let t=50;t<T;t++){Xs.push([1, z[t]]); ys.push(y[t]);}
-  const fs = fit(Xs, ys);
-  const rs = ys.map((v,i)=>v - fs.pred[i]);
-  // Naive y ~ x (level)
+  const fs = fit(Xs, ys); const rs = ys.map((v,i)=>v - fs.pred[i]);
   let Xyx=[], yyx=[]; for(let t=50;t<T;t++){Xyx.push([1, x[t]]); yyx.push(y[t]);}
-  const fyx = fit(Xyx, yyx);
-  const ryx = yyx.map((v,i)=>v - fyx.pred[i]);
-  // Textbook AR-eq y ~ y_{t-1} + x_{t-1}
+  const fyx = fit(Xyx, yyx); const ryx = yyx.map((v,i)=>v - fyx.pred[i]);
   let Xy=[], yY=[]; for(let t=1;t<T;t++){Xy.push([1, y[t-1], x[t-1]]); yY.push(y[t]);}
-  const fy = fit(Xy, yY);
-  const rY = yY.map((v,i)=>v - fy.pred[i]);
-  // 3-panel trace plot: combine x, y, z into one canvas with offsets
+  const fy = fit(Xy, yY); const rY = yY.map((v,i)=>v - fy.pred[i]);
   (function(){
     const c = dpr(document.getElementById('cvCoint')), cv = c.canvas, W = cv.width, H = cv.height;
     const p = 18*devicePixelRatio;
-    const all = x.concat(y, z);
-    const ymin = Math.min(...all), ymax = Math.max(...all);
+    const all = x.concat(y, z); const ymin = Math.min(...all), ymax = Math.max(...all);
     const X = i => p + i/(T-1) * (W - 2*p);
     const Y = v => H - p - (v - ymin)/(ymax - ymin + 1e-9) * (H - 2*p);
     c.clearRect(0,0,W,H);
     c.strokeStyle = "#dfe2eb"; c.lineWidth = 1*devicePixelRatio;
     c.beginPath(); c.moveTo(p, Y(0)); c.lineTo(W-p, Y(0)); c.stroke();
-    function line(arr, col){
-      c.strokeStyle = col; c.lineWidth = 1.2*devicePixelRatio;
-      c.beginPath();
-      for(let i=0;i<T;i++){const xx = X(i), yy = Y(arr[i]); if(i) c.lineTo(xx, yy); else c.moveTo(xx, yy);}
-      c.stroke();
-    }
+    function line(arr, col){c.strokeStyle = col; c.lineWidth = 1.2*devicePixelRatio; c.beginPath(); for(let i=0;i<T;i++){const xx = X(i), yy = Y(arr[i]); if(i) c.lineTo(xx, yy); else c.moveTo(xx, yy);} c.stroke();}
     line(x, "#9aa0ab"); line(y, "#4f46e5"); line(z, "#1f9d6b");
     c.font = 11*devicePixelRatio + "px sans-serif";
     c.fillStyle = "#9aa0ab"; c.fillText("x (driver, RW)", p, p+11*devicePixelRatio);
@@ -609,79 +608,53 @@ function phasePlot(canvasId, x, y, opts){
   })();
   document.getElementById('r2coint').innerHTML =
     `Naive OLS <i>y</i>~<i>z</i> (spurious): <b>R²=${fs.r2.toFixed(3)}</b> <span class="muted">DW=${dw(rs).toFixed(2)}</span> ←&nbsp;trap &nbsp;·&nbsp; ` +
-    `<i>y</i>~<i>x</i> level: <b>R²=${fyx.r2.toFixed(3)}</b> <span class="muted">DW=${dw(ryx).toFixed(2)}</span> &nbsp;·&nbsp; ` +
     `AR-eq <i>y</i>~<i>y</i><sub>−1</sub>+<i>x</i><sub>−1</sub>: <b>R²=${fy.r2.toFixed(3)}</b> <span class="muted">DW=${dw(rY).toFixed(2)}</span>`;
   document.getElementById('blockCoint').innerHTML =
-    `<b>Block reading of M̂<sub>joint</sub>:</b> the AR-equation coefficients ` +
-    `<span class="mono">φ̂<sub>y</sub>=${fy.be[1].toFixed(2)}, γ̂<sub>y</sub>=${fy.be[2].toFixed(2)}</span> ` +
-    `appear as entries of the cross-block <span class="mono">M̂<sup>(yx)</sup></span>; the empty block ` +
-    `<span class="mono">M̂<sup>(xy)</sup></span> reports the Granger direction <em>x → y</em> without a separate test.`;
+    `<b>Block reading of M̂<sub>joint</sub>:</b> coefficients φ̂<sub>y</sub>=${fy.be[1].toFixed(2)}, γ̂<sub>y</sub>=${fy.be[2].toFixed(2)} appear in the cross-block M̂<sup>(yx)</sup>; the empty block M̂<sup>(xy)</sup> reports the Granger direction <em>x → y</em> without a separate test.`;
 })();
 
-// ============ CASE 3 — oscillatory AR(2) (complex roots) ============
+// ─── Case 3 — oscillatory AR(2) ─────────────────────────────────────────────
 (function(){
   const r = rng(33);
   const T = 800, rho = 0.95, theta = Math.PI/5;
   const phi1 = 2*rho*Math.cos(theta), phi2 = -rho*rho;
   const y = new Array(T).fill(0);
   for(let t=2;t<T;t++) y[t] = phi1*y[t-1] + phi2*y[t-2] + gauss(r);
-  // OLS AR(1)
   let X1=[], y1=[]; for(let t=1;t<T;t++){X1.push([1, y[t-1]]); y1.push(y[t]);}
-  const f1 = fit(X1, y1);
-  const r1 = y1.map((v,i)=>v - f1.pred[i]);
-  // OLS AR(2)
+  const f1 = fit(X1, y1); const r1 = y1.map((v,i)=>v - f1.pred[i]);
   let X2=[], y2=[]; for(let t=2;t<T;t++){X2.push([1, y[t-1], y[t-2]]); y2.push(y[t]);}
-  const f2 = fit(X2, y2);
-  const r2 = y2.map((v,i)=>v - f2.pred[i]);
+  const f2 = fit(X2, y2); const r2 = y2.map((v,i)=>v - f2.pred[i]);
   const roots = ar2roots(f2.be[1], f2.be[2]);
   const mod = modulus(roots[0]), arg = argDeg(roots[0]);
-  tracePlot('cvOsc', y, {color:"#e0552b", label:"y_t (T=800, ρ=0.95, θ=π/5)"});
+  tracePlot('cvOsc', y, {color:"#e0552b", label:"y_t  (T=800, ρ=0.95, θ=π/5)"});
   document.getElementById('r2osc').innerHTML =
     `OLS AR(1) <b>R²=${f1.r2.toFixed(3)}</b> <span class="muted">DW=${dw(r1).toFixed(2)}</span> ←&nbsp;rejects whiteness &nbsp;·&nbsp; ` +
-    `OLS AR(2) <b>R²=${f2.r2.toFixed(3)}</b> <span class="muted">DW=${dw(r2).toFixed(2)}</span> &nbsp;·&nbsp; ` +
-    `SPTLS = AR(2) by basis change`;
+    `OLS AR(2) <b>R²=${f2.r2.toFixed(3)}</b> <span class="muted">DW=${dw(r2).toFixed(2)}</span> &nbsp;·&nbsp; SPTLS = AR(2) by basis change`;
   document.getElementById('eigOsc').innerHTML =
-    `<b>Spectrum of M̂:</b> a complex-conjugate eigenvalue pair at ` +
-    `<span class="mono">${mod.toFixed(3)} · e<sup>±i ${arg.toFixed(2)}°</sup></span> ` +
-    `(target <span class="mono">0.95 · e<sup>±i 36°</sup></span>). The rotational frequency in degrees per step ` +
-    `is the <em>argument</em> of the eigenvalue pair — no periodogram, no root-finding on the AR polynomial.`;
+    `<b>Spectrum of M̂:</b> complex pair at <span class="mono">${mod.toFixed(3)} · e<sup>±i ${arg.toFixed(2)}°</sup></span> (target <span class="mono">0.95 · e<sup>±i 36°</sup></span>). Rotational frequency read directly from the eigenvalue argument.`;
 })();
 
-// ============ CASE 4 — bivariate rotational VAR(1) ============
+// ─── Case 4 — bivariate rotational VAR(1) ───────────────────────────────────
 (function(){
   const r = rng(55);
   const T = 700, rho = 0.95, theta = Math.PI/5;
   const cs = rho*Math.cos(theta), sn = rho*Math.sin(theta);
   const x = new Array(T).fill(0), y = new Array(T).fill(0);
-  for(let t=1;t<T;t++){
-    x[t] = cs*x[t-1] - sn*y[t-1] + 0.5*gauss(r);
-    y[t] = sn*x[t-1] + cs*y[t-1] + 0.5*gauss(r);
-  }
-  // Naive OLS x ~ x_{t-1} only
+  for(let t=1;t<T;t++){x[t]=cs*x[t-1]-sn*y[t-1]+0.5*gauss(r);y[t]=sn*x[t-1]+cs*y[t-1]+0.5*gauss(r);}
   let Xn=[], yn=[]; for(let t=1;t<T;t++){Xn.push([1, x[t-1]]); yn.push(x[t]);}
-  const fn = fit(Xn, yn);
-  const rn = yn.map((v,i)=>v - fn.pred[i]);
-  // Textbook VAR(1) x ~ x_{t-1} + y_{t-1}
+  const fn = fit(Xn, yn); const rn = yn.map((v,i)=>v - fn.pred[i]);
   let Xv=[], yv=[]; for(let t=1;t<T;t++){Xv.push([1, x[t-1], y[t-1]]); yv.push(x[t]);}
-  const fv = fit(Xv, yv);
-  const rv = yv.map((v,i)=>v - fv.pred[i]);
-  // y equation
+  const fv = fit(Xv, yv); const rv = yv.map((v,i)=>v - fv.pred[i]);
   let Xv2=[], yv2=[]; for(let t=1;t<T;t++){Xv2.push([1, x[t-1], y[t-1]]); yv2.push(y[t]);}
   const fv2 = fit(Xv2, yv2);
-  // 2x2 coefficient matrix from textbook VAR(1)
   const a = fv.be[1], b = fv.be[2], c = fv2.be[1], d = fv2.be[2];
-  // Polar rotor angle of the 2x2 level block (= polar of A_lvl of M̂_joint)
   const rotor = polar2x2Angle(a, b, c, d);
   phasePlot('cvRot', x, y, {xlabel:"x", ylabel:"y"});
   document.getElementById('r2rot').innerHTML =
-    `Naive OLS <i>x</i>~<i>x</i><sub>−1</sub> (no cross-lag): <b>R²=${fn.r2.toFixed(3)}</b> <span class="muted">DW=${dw(rn).toFixed(2)}</span> ←&nbsp;mis-spec &nbsp;·&nbsp; ` +
-    `VAR(1) <i>x</i>~<i>x</i><sub>−1</sub>+<i>y</i><sub>−1</sub>: <b>R²=${fv.r2.toFixed(3)}</b> <span class="muted">DW=${dw(rv).toFixed(2)}</span> &nbsp;·&nbsp; ` +
-    `SPTLS joint = VAR(1) on level by basis change`;
+    `Naive OLS <i>x</i>~<i>x</i><sub>−1</sub>: <b>R²=${fn.r2.toFixed(3)}</b> <span class="muted">DW=${dw(rn).toFixed(2)}</span> ←&nbsp;mis-spec &nbsp;·&nbsp; ` +
+    `VAR(1): <b>R²=${fv.r2.toFixed(3)}</b> <span class="muted">DW=${dw(rv).toFixed(2)}</span> &nbsp;·&nbsp; SPTLS joint = VAR(1) on level`;
   document.getElementById('rotRot').innerHTML =
-    `<b>Polar of the level block of M̂<sub>joint</sub>:</b> rotor angle ` +
-    `<b>${Math.abs(rotor).toFixed(2)}°</b> per step (target <b>36°</b> = π/5). ` +
-    `The rotation is a single geometric number, read as the antisymmetric grade of the fitted operator ` +
-    `— not a 2×2 coefficient matrix.`;
+    `<b>Polar of the level block of M̂<sub>joint</sub>:</b> rotor angle <b>${Math.abs(rotor).toFixed(2)}°</b> per step (target <b>36°</b> = π/5). One geometric number, not a 2×2 coefficient matrix.`;
 })();
 </script>
 </body>
