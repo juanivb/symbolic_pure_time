@@ -86,6 +86,7 @@
   <a href="#reading">Reading&nbsp;M</a>
   <a href="#practice">In&nbsp;practice</a>
   <a href="#why">Why</a>
+  <a href="#theory">Theory</a>
   <a href="#get">Get&nbsp;it</a>
 </div></nav>
 
@@ -290,6 +291,27 @@
     <h3>What is kept, what is added</h3>
     <p><strong>Kept:</strong> the closed-form solve, Gauss–Markov optimality, cheap computational footprint, transparent coefficients and t-statistics. <strong>Added:</strong> M-I decomposition (memory and innovation as orthogonal channels), spectral reading (integration order, oscillatory frequency), polar decomposition (rotation, stretch), grade decomposition (scalar / bivector / pseudoscalar), and the block structure for multivariate Granger and cointegration. Pre-fit batteries (Dickey–Fuller, Johansen, AIC/BIC lag selection) and post-fit batteries (Ljung–Box, periodogram, Granger test) are no longer downstream steps — they are readings of the same operator.</p>
     <p class="muted note">The result is not a competing methodology so much as a more complete reading of what OLS already does.</p>
+  </div>
+</section>
+
+<!-- THEORY -->
+<section id="theory">
+  <div class="wrap">
+    <h2>Asymptotic theory</h2>
+    <p class="lead">The applied readings demonstrated above rest on a formal asymptotic result: the characteristic polynomial of the SPTLS operator M̂ has standard √<i>T</i>-Gaussian asymptotics <em>uniformly across integration orders</em> <i>d</i>&nbsp;∈&nbsp;{0,&nbsp;1,&nbsp;2}.</p>
+
+    <h3>The mechanism: rank-one identity → universal Jacobian</h3>
+    <p>Under any DGP, the SPTLS estimation error M̂&nbsp;−&nbsp;M₀ has a rank-one structure — all three columns of the error matrix are proportional. This forces the Jacobian of the map M&nbsp;↦&nbsp;(c₁,&nbsp;c₂,&nbsp;c₃) to be the same upper-triangular Pascal matrix <code>J&nbsp;=&nbsp;[[1,1,1],[0,1,2],[0,0,1]]</code> regardless of the data-generating process. The Jacobian annihilates the Brownian-motion contamination that ordinarily produces non-standard limit theory under integration.</p>
+
+    <h3>What follows</h3>
+    <div class="cards">
+      <div class="c"><div class="n">theorem</div><h3>√<i>T</i>-normality</h3><p>The characteristic polynomial coefficients (c₁,&nbsp;c₂,&nbsp;c₃) of M̂ converge to a Gaussian at rate √<i>T</i> for all <i>d</i>&nbsp;∈&nbsp;{0,&nbsp;1,&nbsp;2} — no Dickey–Fuller tables needed.</p></div>
+      <div class="c"><div class="n">corollary</div><h3>χ²(1) integration tests</h3><p>Two Wald statistics with textbook χ²(1) critical values: W₁* tests for a unit root (<i>d</i>&nbsp;≥&nbsp;1 vs <i>d</i>&nbsp;=&nbsp;0), W₂ tests <i>d</i>&nbsp;=&nbsp;2 vs <i>d</i>&nbsp;=&nbsp;1. Both use the same estimator and the same asymptotic framework.</p></div>
+      <div class="c"><div class="n">extension</div><h3>AR(<i>p</i>) via Pascal Jacobian</h3><p>For higher-order AR processes, the universal Jacobian generalises to a Pascal matrix whose entries are binomial coefficients: J<sup>(<i>p</i>)</sup><sub><i>k,j</i></sub>&nbsp;=&nbsp;C(<i>j</i>,&nbsp;<i>k</i>−1). The √<i>T</i>-normality result extends to AR(<i>p</i>) for all <i>p</i>.</p></div>
+      <div class="c"><div class="n">robustness</div><h3>HAC under GARCH</h3><p>Monte Carlo evidence confirms that Newey–West HAC-based versions of W₁* and W₂ maintain correct size under GARCH(1,1) conditional heteroskedasticity.</p></div>
+    </div>
+
+    <p class="muted note">Full proofs, simulations, and replication code: <a href="https://doi.org/10.5281/zenodo.21036369">Zenodo 10.5281/zenodo.21036369</a> · <a href="https://github.com/juanivb/symbolic_pure_time/tree/main/papers/F-023/replication">replication scripts</a></p>
   </div>
 </section>
 
